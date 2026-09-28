@@ -1,132 +1,38 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Crittus Flow</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  
-  <!-- Scripts do Firebase adicionados aqui -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-  
-  <style>
-    :root { --primary: #3b82f6; --bg: #f3f4f6; --text: #1f2937; --card: #ffffff; --border: #e5e7eb; }
-    .dark { --primary: #60a5fa; --bg: #111827; --text: #f9fafb; --card: #1f2937; --border: #374151; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); transition: all 0.3s ease; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-    .btn { padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-    .btn-primary { background: var(--primary); color: white; }
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn-outline { border: 1px solid var(--border); }
-    .btn-outline:hover { background: var(--border); }
-    input, select, textarea { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 0.5rem; border-radius: 0.5rem; width: 100%; outline: none; }
-    input:focus, select:focus, textarea:focus { border-color: var(--primary); ring: 2px solid var(--primary); }
-    .nav-item { padding: 0.75rem 1rem; border-radius: 0.5rem; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; color: #6b7280; }
-    .nav-item:hover, .nav-item.active { background: var(--primary); color: white; }
-    .dark .nav-item:hover, .dark .nav-item.active { background: #374151; color: var(--primary); }
-    .kanban-col { min-width: 280px; max-width: 280px; }
-    .deal-card { cursor: grab; }
-    .deal-card:active { cursor: grabbing; }
-    #toast-container { position: fixed; bottom: 1rem; right: 1rem; z-index: 50; display: flex; flex-direction: column; gap: 0.5rem; }
-    .toast { padding: 1rem; border-radius: 0.5rem; color: white; animation: slideIn 0.3s ease forwards; opacity: 0; }
-    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    .glass { background: rgba(var(--card-rgb), 0.8); backdrop-filter: blur(10px); }
-    .status-badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
-    .status-Ativo { background: #dcfce7; color: #166534; }
-    .status-Inativo { background: #fee2e2; color: #991b1b; }
-    .dark .status-Ativo { background: #064e3b; color: #34d399; }
-    .dark .status-Inativo { background: #7f1d1d; color: #f87171; }
-    .heat-Frio { color: #3b82f6; } .heat-Morno { color: #f59e0b; } .heat-Quente { color: #ef4444; }
-    /* Estilos Login */
-    #login-screen { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: flex; align-items: center; justify-content: center; }
-    .login-box { background: var(--card); padding: 2.5rem; border-radius: 1rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-  </style>
-</head>
-<body class="flex h-screen overflow-hidden text-sm">
-
-  <!-- Login Screen -->
-  <div id="login-screen">
-    <div class="login-box border border-gray-200 dark:border-gray-700">
-      <div class="flex justify-center mb-6">
-        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-3xl">
-          <i class="fas fa-water"></i>
-        </div>
-      </div>
-      <h1 class="text-2xl font-bold mb-2">Crittus Flow</h1>
-      <p class="text-gray-500 mb-6">Gestão Inteligente</p>
-      <form id="login-form" class="space-y-4">
-        <div>
-          <input type="text" id="login-user" placeholder="Usuário" required class="w-full">
-        </div>
-        <div>
-          <input type="password" id="login-pass" placeholder="Senha" required class="w-full">
-        </div>
-        <button type="submit" class="btn btn-primary w-full py-2 text-lg mt-4">Entrar</button>
-      </form>
-      <div id="login-error" class="text-red-500 mt-4 hidden text-sm">Credenciais inválidas!</div>
-    </div>
-  </div>
-
-  <!-- App Main (Hidden by default) -->
-  <div id="app" class="flex w-full h-full hidden">
-    <!-- Sidebar -->
-    <aside class="w-64 card m-4 flex flex-col hidden md:flex transition-all">
-      <div class="p-6 flex items-center gap-3 border-b border-[var(--border)]">
-        <i class="fas fa-water text-2xl text-[var(--primary)]"></i>
-        <h1 class="text-xl font-bold tracking-tight">Crittus Flow</h1>
-      </div>
-      <nav class="p-4 flex-1 space-y-2 overflow-y-auto" id="nav-menu">
-        <div class="nav-item active" data-view="dashboard"><i class="fas fa-chart-pie w-6"></i> Dashboard</div>
-        <div class="nav-item" data-view="clients"><i class="fas fa-users w-6"></i> Clientes</div>
-        <div class="nav-item" data-view="crm"><i class="fas fa-handshake w-6"></i> CRM / Funil</div>
-        <div class="nav-item" data-view="projects"><i class="fas fa-project-diagram w-6"></i> Projetos</div>
-        <div class="nav-item" data-view="finance"><i class="fas fa-wallet w-6"></i> Financeiro</div>
-        <div class="nav-item" data-view="reports"><i class="fas fa-file-alt w-6"></i> Relatórios</div>
-        <div class="nav-item" data-view="settings"><i class="fas fa-cog w-6"></i> Configurações</div>
-      </nav>
-      <div class="p-4 border-t border-[var(--border)] space-y-2">
-        <button class="btn btn-outline w-full text-left flex items-center gap-2" onclick="toggleTheme()"><i class="fas fa-moon w-5"></i> Tema</button>
-        <button class="btn btn-outline w-full text-left flex items-center gap-2 text-red-500" onclick="logout()"><i class="fas fa-sign-out-alt w-5"></i> Sair</button>
-      </div>
-    </aside>
-
-    <!-- Mobile Header -->
-    <div class="md:hidden fixed top-0 w-full card z-20 flex justify-between items-center p-4 border-b-0">
-      <div class="flex items-center gap-2"><i class="fas fa-water text-[var(--primary)]"></i> <span class="font-bold">Crittus Flow</span></div>
-      <button onclick="$('aside').classList.toggle('hidden');$('aside').classList.toggle('absolute');$('aside').classList.toggle('z-30');$('aside').classList.toggle('h-[calc(100vh-2rem)]')" class="text-2xl"><i class="fas fa-bars"></i></button>
-    </div>
-
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col m-4 mt-16 md:mt-4 ml-4 md:ml-0 overflow-hidden relative">
-      <header class="card p-4 mb-4 flex justify-between items-center shrink-0">
-        <h2 id="view-title" class="text-xl font-semibold">Dashboard</h2>
-        <div id="header-actions" class="flex gap-2"></div>
-      </header>
-      <div id="content-area" class="flex-1 overflow-y-auto space-y-4 pb-12"></div>
-    </main>
-  </div>
-
-  <div id="toast-container"></div>
-  <div id="modal-container" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
-    <div class="card w-full max-w-2xl max-h-[90vh] flex flex-col">
-      <div class="p-4 border-b border-[var(--border)] flex justify-between items-center">
-        <h3 id="modal-title" class="text-lg font-bold"></h3>
-        <button onclick="closeModal()" class="text-gray-500 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
-      </div>
-      <div id="modal-body" class="p-4 overflow-y-auto flex-1"></div>
-      <div class="p-4 border-t border-[var(--border)] flex justify-end gap-2" id="modal-footer"></div>
-    </div>
-  </div>
-
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Crittus Flow — CRM</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Firebase App (core) and Realtime Database SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+<style>
+:root{--bg:#07080f;--surface:#10141f;--surface-3:#1b2133;--line:#28304a;--text:#f4f6fb;--muted:#98a2bd;--muted-2:#79839f;--primary:#8d6bff;--primary-2:#b388ff;--success:#42d4b2;--warning:#ffbd5a;--danger:#ff657d;--radius:20px;--radius-sm:12px;--shadow:0 24px 70px rgba(0,0,0,.45)}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(1200px 700px at 8% -8%,rgba(141,107,255,.16),transparent),radial-gradient(900px 650px at 100% 0,rgba(66,212,178,.10),transparent),var(--bg);color:var(--text);font:14px/1.5 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:0}a{color:var(--primary-2)}.hidden{display:none!important}
+#login{min-height:100vh;display:grid;place-items:center;padding:24px}.auth-card{width:min(460px,100%);padding:44px;border-radius:30px;background:linear-gradient(155deg,rgba(21,26,41,.96),rgba(10,12,20,.96));border:1px solid rgba(255,255,255,.08);box-shadow:var(--shadow)}.logo{display:flex;align-items:center;gap:12px;font-weight:850}.logo-mark{width:42px;height:42px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,var(--primary),#ff8ac7);font-weight:900}.auth-card h1{font-size:30px;margin:30px 0 10px}.auth-card p{color:var(--muted);margin:0 0 28px}
+label{display:block;margin-bottom:7px;font-size:12px;font-weight:800;color:#c8cee3;text-transform:uppercase}input,select,textarea{width:100%;padding:12px;color:var(--text);background:#0d101a;border:1px solid var(--line);border-radius:12px;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(141,107,255,.13)}textarea{min-height:95px;resize:vertical}select:disabled{opacity:.7;cursor:not-allowed}
+.btn{padding:11px 15px;border-radius:12px;color:#fff;font-weight:800;background:linear-gradient(135deg,var(--primary),#6b48e0)}.btn:hover{filter:brightness(1.08)}.btn.full{width:100%}.btn.secondary{background:var(--surface-3)}.btn.success{background:linear-gradient(135deg,#22b392,#128a71)}.btn.danger{background:linear-gradient(135deg,#b2364e,#8d2338)}.btn.small{padding:6px 10px;font-size:12px;border-radius:9px}.btn.ghost{background:transparent;border:1px solid var(--line)}
+#app{display:flex;min-height:100vh}.sidebar{position:fixed;inset:0 auto 0 0;width:260px;padding:22px 14px;border-right:1px solid var(--line);background:rgba(7,8,15,.88);display:flex;flex-direction:column}.nav{display:grid;gap:4px}.nav button{display:flex;align-items:center;gap:10px;padding:12px;color:#a9b2ca;background:transparent;border-radius:11px;font-weight:750;text-align:left}.nav button:hover{background:#1d2436;color:#fff}.nav button.active{background:linear-gradient(90deg,rgba(141,107,255,.2),transparent);color:#fff;box-shadow:inset 3px 0 var(--primary)}.side-section{padding:16px 12px 6px;font-size:10px;letter-spacing:.12em;color:var(--muted-2);text-transform:uppercase;font-weight:800}.side-foot{margin-top:auto;padding:14px;border-radius:13px;background:var(--surface);border:1px solid var(--line);font-size:11px;color:var(--muted)}
+main{margin-left:260px;width:calc(100% - 260px);padding:32px;max-width:1700px}.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:24px}.page-head h1{margin:0;font-size:28px}.page-head p{margin:6px 0 0;color:var(--muted)}.head-actions{display:flex;gap:9px;flex-wrap:wrap}.section{margin-bottom:20px}.section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.section-title h2{margin:0;font-size:16px}.small{color:var(--muted);font-size:12px}
+.card{background:linear-gradient(150deg,rgba(24,29,45,.96),rgba(13,16,26,.96));border:1px solid rgba(255,255,255,.07);border-radius:18px;box-shadow:var(--shadow);padding:20px}.grid{display:grid;gap:14px}.metrics{grid-template-columns:repeat(4,minmax(0,1fr))}.metric-label{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase}.metric-value{margin-top:11px;font-size:26px;font-weight:900}.metric-sub{margin-top:6px;font-size:12px;color:var(--muted-2)}.good{color:var(--success)}.warn{color:var(--warning)}.bad{color:var(--danger)}.primary{color:var(--primary-2)}
+.table-card{padding:0;overflow:hidden}.table-head{padding:17px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.table-scroll{overflow:auto}.table{width:100%;min-width:1000px;border-collapse:collapse}.table th{position:sticky;top:0;background:#151a29;padding:13px 17px;color:#98a2bd;font-size:10px;text-transform:uppercase;letter-spacing:.09em;text-align:left;border-bottom:1px solid var(--line)}.table td{padding:14px 17px;border-bottom:1px solid rgba(40,48,74,.6);vertical-align:middle}.table tbody tr:hover{background:rgba(141,107,255,.05)}.empty{padding:40px;text-align:center;color:var(--muted)}.primary-cell{font-weight:800}.secondary-cell{color:var(--muted);font-size:12px;margin-top:3px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:99px;font-size:11px;font-weight:800;background:#272f45;color:#cbd2e8}.badge::before{content:"";width:6px;height:6px;border-radius:50%;background:#8792ad}.badge.green{background:rgba(66,212,178,.12);color:#77efd3}.badge.green::before{background:var(--success)}.badge.purple{background:rgba(141,107,255,.13);color:#c1a8ff}.badge.purple::before{background:var(--primary)}.badge.orange{background:rgba(255,189,90,.12);color:#ffd08a}.badge.orange::before{background:var(--warning)}.badge.red{background:rgba(255,101,125,.13);color:#ff9baa}.badge.red::before{background:var(--danger)}
+.row-actions{display:flex;gap:6px;flex-wrap:wrap}.row-actions .btn{padding:5px 8px;font-size:11px}.filters{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:10px;margin-bottom:14px}.search{position:relative}.search input{padding-left:34px}.search::before{content:"⌕";position:absolute;left:12px;top:50%;translate:0 -50%;color:var(--muted)}
+.modal{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:22px;background:rgba(3,4,9,.72);backdrop-filter:blur(6px)}.modal-panel{width:min(900px,100%);max-height:92vh;overflow:auto;border-radius:22px;background:#10141f;border:1px solid rgba(255,255,255,.08)}.modal-head{position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;padding:20px 24px;background:rgba(16,20,31,.97);border-bottom:1px solid var(--line)}.modal-head h2{margin:0;font-size:19px}.modal-head .close{width:34px;height:34px;border-radius:10px;background:var(--surface-3);color:#fff}.modal-body{padding:24px}.modal-foot{position:sticky;bottom:0;display:flex;justify-content:flex-end;gap:9px;padding:16px 24px;background:rgba(16,20,31,.97);border-top:1px solid var(--line)}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.span2{grid-column:span 2}.fieldset{border:1px solid var(--line);border-radius:14px;padding:16px;margin:0}.fieldset legend{padding:0 8px;color:var(--primary-2);font-size:11px;font-weight:800;text-transform:uppercase}.checks{display:flex;flex-wrap:wrap;gap:7px}.checks label{display:flex;align-items:center;margin:0;padding:7px 10px;border:1px solid var(--line);border-radius:9px;color:#c5cbe0;font-size:12px;text-transform:none}
+.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.detail{background:#0d101a;border:1px solid var(--line);border-radius:11px;padding:12px}.detail .k{color:var(--muted-2);font-size:10px;font-weight:800;text-transform:uppercase;margin-bottom:4px}.detail .v{font-weight:650}.detail.full{grid-column:span 2}
+.timeline{display:grid;gap:9px}.timeline-item,.installment{display:grid;gap:8px;align-items:center;background:#0d101a;border:1px solid var(--line);border-radius:10px;padding:8px}.timeline-item{grid-template-columns:1fr 1.5fr 150px 150px auto}.installment{grid-template-columns:130px 1fr 120px 170px auto}.history-item{background:#0d101a;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}.kanban{display:grid;grid-template-columns:repeat(5,minmax(190px,1fr));gap:12px}.kanban-col{background:#0d101a;border:1px solid var(--line);border-radius:14px;padding:12px;min-height:220px}.kanban-col h4{margin:0 0 10px;font-size:12px;color:var(--muted);text-transform:uppercase}.deal-card{background:#161c2c;border:1px solid var(--line);border-radius:11px;padding:11px;margin-bottom:8px}.deal-card b{font-size:13px}.progress{height:6px;border-radius:99px;background:#20273a;overflow:hidden}.progress span{display:block;height:100%;background:linear-gradient(90deg,var(--primary),#c195ff)}.bar-chart{display:flex;align-items:flex-end;gap:12px;height:210px;padding-top:16px}.bar-wrap{flex:1;text-align:center}.bar{border-radius:7px;background:linear-gradient(to top,var(--primary),#c195ff);min-height:6px}.bar.green{background:linear-gradient(to top,#22b392,#6ff0cd)}.bar.red{background:linear-gradient(to top,#b2364e,#ff8b9d)}.bar-label{font-size:11px;color:var(--muted)}.toast{position:fixed;bottom:22px;right:22px;z-index:30;padding:14px 17px;border-radius:13px;background:#181e2e;border:1px solid var(--line);font-weight:700;opacity:0;translate:0 14px;transition:.25s;pointer-events:none}.toast.show{opacity:1;translate:0 0}
+@media(max-width:1000px){.metrics{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr}.form-grid,.detail-grid{grid-template-columns:1fr}.span2,.detail.full{grid-column:auto}.timeline-item,.installment{grid-template-columns:1fr}.kanban{grid-template-columns:1fr}.sidebar{width:72px;padding:16px 8px}.sidebar .label-text,.side-foot,.side-section,.logo-text{display:none}.nav button{justify-content:center}main{margin-left:72px;width:calc(100% - 72px);padding:18px}.table{min-width:760px}}
+</style></head><body>
+<section id="login"><div class="auth-card"><div class="logo"><div class="logo-mark">C</div><span class="logo-text">CRITTUS FLOW</span></div><h1>Central de crescimento da sua agência.</h1><p>Clientes, oportunidades, projetos e financeiro conectados com foco em caixa e execução.</p><form onsubmit="event.preventDefault();login()"><div style="margin-bottom:14px"><label>Login</label><input id="loginUser" autocomplete="username" placeholder="admin"></div><div><label>Senha</label><input id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••"></div><button class="btn full" style="margin-top:18px">Entrar na plataforma</button></form><div id="loginError" class="hidden" style="color:#ff97a7;font-size:13px;margin-top:12px">Login ou senha inválidos.</div></div></section>
+<section id="app" class="hidden"><aside class="sidebar"><div class="logo" style="padding:0 8px 20px"><div class="logo-mark">C</div><span class="logo-text">CRITTUS FLOW</span></div><div class="side-section">Operação</div><nav class="nav"><button class="active" data-view="dashboard" onclick="setView('dashboard',this)" title="Dashboard"><span>◈</span><span class="label-text">Dashboard</span></button><button data-view="clients" onclick="setView('clients',this)" title="Clientes"><span>◎</span><span class="label-text">Clientes</span></button><button data-view="deals" onclick="setView('deals',this)" title="Negociações"><span>◇</span><span class="label-text">Negociações</span></button><button data-view="projects" onclick="setView('projects',this)" title="Projetos"><span>▣</span><span class="label-text">Projetos</span></button><button data-view="agenda" onclick="setView('agenda',this)" title="Agenda"><span>🗓</span><span class="label-text">Agenda</span></button></nav><div class="side-section">Financeiro</div><nav class="nav"><button data-view="payables" onclick="setView('payables',this)" title="Contas a pagar"><span>↓</span><span class="label-text">Contas a pagar</span></button><button data-view="receivables" onclick="setView('receivables',this)" title="Contas a receber"><span>↑</span><span class="label-text">Contas a receber</span></button></nav><div class="side-section">Dados</div><nav class="nav"><button onclick="exportBackup()" title="Exportar backup"><span>⇩</span><span class="label-text">Exportar backup</span></button><button onclick="$('#importInput').click()" title="Importar backup"><span>⇧</span><span class="label-text">Importar backup</span></button><button onclick="logout()" title="Sair"><span>⏻</span><span class="label-text">Sair</span></button></nav><input id="importInput" type="file" accept="application/json" class="hidden" onchange="importBackup(event)"><div class="side-foot"><b>Firebase Conectado.</b><br>Dados sincronizados na nuvem.</div></aside><main id="main"></main></section>
+<div id="modal" class="modal hidden"><div class="modal-panel"><div class="modal-head"><h2 id="modalTitle"></h2><button class="close" onclick="closeModal()">×</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div><div id="toast" class="toast"></div>
 <script>
-// --- CONFIGURAÇÃO DO FIREBASE ---
+// Configuração do Firebase[cite: 13]
 const firebaseConfig = {
-  apiKey: "AIzaSyCEUNMNFEPeSZS9_yETvZc2X3Yb9OiLUq4",
+  apiKey: "AIzaSyCEUNMFEpSZS9_yETvZc2X3Yb9oIlUq4",
   authDomain: "crittus-flow.firebaseapp.com",
   databaseURL: "https://crittus-flow-default-rtdb.firebaseio.com",
   projectId: "crittus-flow",
@@ -135,10 +41,9 @@ const firebaseConfig = {
   appId: "1:446646380066:web:9934c96216f8c53559cc7b"
 };
 
-// Inicializar Firebase
+// Inicializar Firebase[cite: 13]
 firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-// --------------------------------
+const rtdb = firebase.database();
 
 const KEY='crittus_flow_v8';
 const STATUSES=['Não contatado','Paquera','Proposta','Fechado/Projeto','Perdido'];
@@ -146,667 +51,111 @@ const HEAT=['Frio','Morno','Quente'];
 const ACTIONS=['Telefone','E-mail','WhatsApp','Visita','Outro'];
 const NETWORKS=['Instagram','Facebook','Site/Blog','Google Meu Negócio','TikTok','Pinterest','YouTube','Outros'];
 
-let db={clients:[],deals:[],projects:[],payables:[],receivables:[]};
-let currentView='dashboard',filters={};
-const $ = s => document.querySelector(s);
-const $$ = s => [...document.querySelectorAll(s)];
-function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+let db = migrate(loadLocal());
+let currentView = 'dashboard';
+let filters = {};
+const $= s => document.querySelector(s),$$ = s => [...document.querySelectorAll(s)];
 
-// --- ESCUTAR A BASE DE DADOS EM TEMPO REAL ---
-database.ref(KEY).on('value', (snapshot) => {
-  const data = snapshot.val();
-  if (data) {
-    db = migrate(data);
-  } else {
-    // Se a base de dados estiver vazia, inicializa uma nova
-    db = migrate({clients:[],deals:[],projects:[],payables:[],receivables:[]});
-  }
-  // Só atualiza o ecrã se o utilizador já tiver feito o login
-  if (!$('#app').classList.contains('hidden')) {
+// Sincronização inicial com o Firebase
+rtdb.ref('crittus_flow_data').once('value').then(snapshot => {
+  if (snapshot.exists()) {
+    db = migrate(snapshot.val());
     setView(currentView);
   }
-});
-// ---------------------------------------------
+}).catch(err => console.error("Erro ao carregar dados do Firebase:", err));
 
-function migrate(d){
-  d=Object.assign({clients:[],deals:[],projects:[],payables:[],receivables:[]},d||{});
-  d.clients.forEach(c=>{c.status=c.status||'Ativo';c.networks=c.networks||[]});
-  d.deals.forEach(x=>{x.history=x.history||[];x.lossReason=x.lossReason||''});
-  d.projects.forEach(p=>{p.schedule=(p.schedule||[]).map(a=>Object.assign({id:uid(),status:'Pendente'},a));p.receivableId=p.receivableId||null;delete p.installments});
-  d.receivables.forEach(r=>{r.installments=(r.installments||[]).map(i=>Object.assign({id:uid(),payments:i.payments||[]},i))});
-  d.payables.forEach(p=>{p.payments=p.payments||[];p.recurring=!!p.recurring});
-  refreshOverdue(d);
-  return d;
-}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function loadLocal(){try{return JSON.parse(localStorage.getItem(KEY)||'null')||{clients:[],deals:[],projects:[],payables:[],receivables:[]}}catch{return{clients:[],deals:[],projects:[],payables:[],receivables:[]}}}
+function migrate(d){d=Object.assign({clients:[],deals:[],projects:[],payables:[],receivables:[]},d||{});d.clients.forEach(c=>{c.status=c.status||'Ativo';c.networks=c.networks||[]});d.deals.forEach(x=>{x.history=x.history||[];x.lossReason=x.lossReason||''});d.projects.forEach(p=>{p.schedule=(p.schedule||[]).map(a=>Object.assign({id:uid(),status:'Pendente'},a));p.receivableId=p.receivableId||null;delete p.installments});d.receivables.forEach(r=>{r.installments=(r.installments||[]).map(i=>Object.assign({id:uid(),payments:i.payments||[]},i))});d.payables.forEach(p=>{p.payments=p.payments||[];p.recurring=!!p.recurring});refreshOverdue(d);return d}
 
-// --- GUARDAR NA NUVEM ---
 function save(){
-  try {
-    database.ref(KEY).set(db);
-  } catch(e) {
-    toast('Erro ao guardar na nuvem.', 'error');
+  try{
+    localStorage.setItem(KEY,JSON.stringify(db));
+    rtdb.ref('crittus_flow_data').set(db)
+      .then(() => toast('Dados salvos na nuvem.'))
+      .catch(e => {
+        console.error("Erro ao salvar no Firebase:", e);
+        toast('Erro ao sincronizar com o Firebase.','error');
+      });
+  }catch(e){
+    toast('Erro de armazenamento local.','error')
   }
 }
-// ------------------------
 
-function refreshOverdue(d){
-  const today=new Date().toISOString().split('T')[0];
-  d.receivables.forEach(r=>{
-    let allPaid=true;
-    r.installments.forEach(i=>{
-      const paid=i.payments.reduce((sum,p)=>sum+p.amount,0);
-      if(paid<i.amount){allPaid=false;if(i.date<today)i.status='Atrasado';else if(i.status==='Atrasado')i.status='Pendente'}
-      else i.status='Pago';
-    });
-    r.status=allPaid?'Pago':r.installments.some(i=>i.status==='Atrasado')?'Atrasado':'Pendente';
-  });
-  d.payables.forEach(p=>{
-    const paid=p.payments.reduce((sum,py)=>sum+py.amount,0);
-    if(paid<p.amount){if(p.dueDate<today)p.status='Atrasado';else if(p.status==='Atrasado')p.status='Pendente'}
-    else p.status='Pago';
-  });
-}
-
-function toast(msg,type='success'){
-  const t=document.createElement('div');
-  t.className=`toast ${type==='success'?'bg-green-500':'bg-red-500'}`;
-  t.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'} mr-2"></i>${msg}`;
-  $('#toast-container').appendChild(t);
-  setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.remove(),300)},3000);
-}
-
-function toggleTheme(){
-  document.documentElement.classList.toggle('dark');
-  localStorage.setItem('theme',document.documentElement.classList.contains('dark')?'dark':'light');
-}
-if(localStorage.getItem('theme')==='dark') document.documentElement.classList.add('dark');
-
-function fmtMoney(n){return (n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
-function fmtDate(d){return d?d.split('-').reverse().join('/'):'-'}
-
-// Login Logic
-$('#login-form').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const u = $('#login-user').value;
-  const p = $('#login-pass').value;
-  if(u === 'admin' && p === '24121103') {
-    $('#login-screen').classList.add('hidden');
-    $('#app').classList.remove('hidden');
-    setView('dashboard');
-  } else {
-    $('#login-error').classList.remove('hidden');
-  }
-});
-
-function logout() {
-  $('#login-user').value = '';
-  $('#login-pass').value = '';
-  $('#login-error').classList.add('hidden');
-  $('#app').classList.add('hidden');
-  $('#login-screen').classList.remove('hidden');
-}
-
-$$('.nav-item').forEach(el=>el.addEventListener('click',(e)=>{$$
-('.nav-item').forEach(n=>n.classList.remove('active'));
-  e.currentTarget.classList.add('active');
-  if(window.innerWidth<768)$('aside').classList.add('hidden');
-  setView(e.currentTarget.dataset.view);
-}));
-
-function setView(view){
-  currentView=view;
-  const c=$('#content-area');
-  const h=$('#header-actions');
-  c.innerHTML=''; h.innerHTML=''; filters={};
-  
-  if(view==='dashboard') renderDashboard(c,h);
-  if(view==='clients') renderClients(c,h);
-  if(view==='crm') renderCRM(c,h);
-  if(view==='projects') renderProjects(c,h);
-  if(view==='finance') renderFinance(c,h);
-  if(view==='reports') renderReports(c,h);
-  if(view==='settings') renderSettings(c,h);
-  
-  $('#view-title').innerText=view.charAt(0).toUpperCase()+view.slice(1).replace('Finance','Financeiro').replace('Reports','Relatórios').replace('Settings','Configurações');
-}
-
-/* ================= MODAL ================= */
-function openModal(title,bodyHtml,footerHtml){
-  $('#modal-title').innerText=title;
-  $('#modal-body').innerHTML=bodyHtml;
-  $('#modal-footer').innerHTML=footerHtml;
-  $('#modal-container').classList.remove('hidden');
-}
-function closeModal(){$('#modal-container').classList.add('hidden')}
-
-/* ================= DASHBOARD ================= */
-function renderDashboard(c,h){
-  const thisMonth=new Date().toISOString().slice(0,7);
-  const rev=db.receivables.flatMap(r=>r.installments).filter(i=>i.date.startsWith(thisMonth)&&i.status==='Pago').reduce((s,i)=>s+(i.payments.reduce((ps,p)=>ps+p.amount,0)),0);
-  const exp=db.payables.filter(p=>p.dueDate.startsWith(thisMonth)&&p.status==='Pago').reduce((s,p)=>s+(p.payments.reduce((ps,py)=>ps+py.amount,0)),0);
-  const activeClients=db.clients.filter(c=>c.status==='Ativo').length;
-  const openDeals=db.deals.filter(d=>d.status!=='Fechado/Projeto'&&d.status!=='Perdido').length;
-
-  c.innerHTML=`
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="card p-4 border-l-4 border-blue-500"><p class="text-gray-500 text-xs">Receitas (Mês)</p><h3 class="text-xl font-bold text-blue-600">${fmtMoney(rev)}</h3></div>
-      <div class="card p-4 border-l-4 border-red-500"><p class="text-gray-500 text-xs">Despesas (Mês)</p><h3 class="text-xl font-bold text-red-600">${fmtMoney(exp)}</h3></div>
-      <div class="card p-4 border-l-4 border-green-500"><p class="text-gray-500 text-xs">Lucro (Mês)</p><h3 class="text-xl font-bold text-green-600">${fmtMoney(rev-exp)}</h3></div>
-      <div class="card p-4 border-l-4 border-purple-500"><p class="text-gray-500 text-xs">Clientes / Negócios</p><h3 class="text-xl font-bold">${activeClients} / ${openDeals}</h3></div>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-      <div class="card p-4"><h3 class="font-bold mb-4">Fluxo de Caixa (6 Meses)</h3><canvas id="chartCash"></canvas></div>
-      <div class="card p-4"><h3 class="font-bold mb-4">Funil de Vendas</h3><canvas id="chartFunnel"></canvas></div>
-    </div>
-  `;
-
-  setTimeout(()=>{
-    const months=[...Array(6)].map((_,i)=>{const d=new Date();d.setMonth(d.getMonth()-i);return d.toISOString().slice(0,7)}).reverse();
-    const revData=months.map(m=>db.receivables.flatMap(r=>r.installments).filter(i=>i.date.startsWith(m)&&i.status==='Pago').reduce((s,i)=>s+(i.payments.reduce((ps,p)=>ps+p.amount,0)),0));
-    const expData=months.map(m=>db.payables.filter(p=>p.dueDate.startsWith(m)&&p.status==='Pago').reduce((s,p)=>s+(p.payments.reduce((ps,py)=>ps+py.amount,0)),0));
-    new Chart($('#chartCash'),{type:'bar',data:{labels:months.map(m=>m.split('-').reverse().join('/')),datasets:[{label:'Receitas',data:revData,backgroundColor:'#3b82f6'},{label:'Despesas',data:expData,backgroundColor:'#ef4444'}]}});
-    
-    const funnelData=STATUSES.map(s=>db.deals.filter(d=>d.status===s).length);
-    new Chart($('#chartFunnel'),{type:'doughnut',data:{labels:STATUSES,datasets:[{data:funnelData,backgroundColor:['#9ca3af','#f59e0b','#3b82f6','#10b981','#ef4444']}]}});
-  },100);
-}
-
-/* ================= CLIENTES ================= */
-function renderClients(c,h){
-  h.innerHTML=`<input type="text" id="search-client" placeholder="Buscar..." class="w-48"><button class="btn btn-primary" onclick="editClient()">+ Novo</button>`;
-  const updateList=()=>{
-    const q=($('#search-client')?.value||'').toLowerCase();
-    const list=db.clients.filter(cl=>cl.name.toLowerCase().includes(q)||cl.doc.includes(q));
-    c.innerHTML=`<div class="card overflow-x-auto"><table class="w-full text-left border-collapse">
-      <thead class="bg-[var(--bg)] border-b border-[var(--border)]"><tr><th class="p-3">Nome</th><th class="p-3">Doc/CPF</th><th class="p-3">Status</th><th class="p-3">Ações</th></tr></thead>
-      <tbody>${list.map(cl=>`
-        <tr class="border-b border-[var(--border)] hover:bg-[var(--bg)]">
-          <td class="p-3"><div class="font-bold">${cl.name}</div><div class="text-xs text-gray-500">${cl.email||''}</div></td>
-          <td class="p-3">${cl.doc||'-'}</td>
-          <td class="p-3"><span class="status-badge status-${cl.status}">${cl.status}</span></td>
-          <td class="p-3 space-x-2">
-            <button class="text-blue-500 hover:text-blue-700" onclick="editClient('${cl.id}')"><i class="fas fa-edit"></i></button>
-            <button class="text-red-500 hover:text-red-700" onclick="delClient('${cl.id}')"><i class="fas fa-trash"></i></button>
-            <a href="https://wa.me/${(cl.phone||'').replace(/\D/g,'')}" target="_blank" class="text-green-500 hover:text-green-700"><i class="fab fa-whatsapp"></i></a>
-          </td>
-        </tr>`).join('')||'<tr><td colspan="4" class="p-4 text-center">Nenhum cliente</td></tr>'}
-      </tbody></table></div>`;
-  };
-  updateList();
-  $('#search-client').addEventListener('input',updateList);
-}
-
-window.editClient=id=>{
-  const cl=db.clients.find(x=>x.id===id)||{id:uid(),name:'',doc:'',email:'',phone:'',address:'',notes:'',status:'Ativo',networks:[],niche:'',products:''};
-  openModal(id?'Editar Cliente':'Novo Cliente',`
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div><label class="text-xs">Nome/Razão Social*</label><input type="text" id="cl-name" value="${cl.name}"></div>
-      <div><label class="text-xs">CPF/CNPJ</label><input type="text" id="cl-doc" value="${cl.doc}"></div>
-      <div><label class="text-xs">E-mail</label><input type="email" id="cl-email" value="${cl.email}"></div>
-      <div><label class="text-xs">Telefone</label><input type="text" id="cl-phone" value="${cl.phone}"></div>
-      <div><label class="text-xs">Status</label><select id="cl-status"><option ${cl.status==='Ativo'?'selected':''}>Ativo</option><option ${cl.status==='Inativo'?'selected':''}>Inativo</option></select></div>
-      <div><label class="text-xs">Nicho de Atuação</label><input type="text" id="cl-niche" value="${cl.niche||''}"></div>
-      <div class="col-span-full"><label class="text-xs">Produtos/Serviços que vende</label><input type="text" id="cl-products" value="${cl.products||''}"></div>
-      <div class="col-span-full"><label class="text-xs">Redes Sociais Existentes</label>
-        <div class="flex flex-wrap gap-2 mt-1">
-          ${NETWORKS.map(n=>`<label class="flex items-center gap-1 text-xs"><input type="checkbox" class="cl-net" value="${n}" ${cl.networks.includes(n)?'checked':''}>${n}</label>`).join('')}
-        </div>
-      </div>
-      <div class="col-span-full"><label class="text-xs">Endereço</label><input type="text" id="cl-address" value="${cl.address}"></div>
-      <div class="col-span-full"><label class="text-xs">Notas</label><textarea id="cl-notes" rows="3">${cl.notes}</textarea></div>
-    </div>
-  `,`<button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveClient('${cl.id}')">Salvar</button>`);
-};
-window.saveClient=id=>{
-  const name=$('#cl-name').value.trim(); if(!name) return toast('Nome obrigatório','error');
-  const cl={id,name,doc:$('#cl-doc').value,email:$('#cl-email').value,phone:$('#cl-phone').value,address:$('#cl-address').value,notes:$('#cl-notes').value,status:$('#cl-status').value,niche:$('#cl-niche').value,products:$('#cl-products').value,networks:$$('.cl-net:checked').map(e=>e.value)};
-  const idx=db.clients.findIndex(x=>x.id===id);
-  if(idx>-1) db.clients[idx]=cl; else db.clients.push(cl);
-  save(); closeModal(); setView('clients'); toast('Cliente salvo!');
-};
-window.delClient=id=>{if(confirm('Excluir cliente? Negócios/Projetos atrelados podem perder a referência.')){db.clients=db.clients.filter(x=>x.id!==id);save();setView('clients');toast('Excluído');}};
-
-/* ================= CRM / FUNIL ================= */
-function renderCRM(c,h){
-  h.innerHTML=`<button class="btn btn-primary" onclick="editDeal()">+ Novo Negócio</button>`;
-  c.innerHTML=`<div class="flex gap-4 overflow-x-auto pb-4 h-full" id="kanban-board"></div>`;
-  const board=$('#kanban-board');
-  STATUSES.forEach(st=>{
-    const col=document.createElement('div'); col.className='kanban-col flex flex-col gap-2';
-    col.innerHTML=`<div class="card p-2 font-bold text-center bg-[var(--bg)]">${st} <span class="text-xs font-normal text-gray-500">(${db.deals.filter(d=>d.status===st).length})</span></div><div class="flex-1 space-y-2 droppable" data-status="${st}"></div>`;
-    board.appendChild(col);
-  });
-  db.deals.forEach(d=>{
-    const cl=db.clients.find(x=>x.id===d.clientId);
-    const drop=board.querySelector(`[data-status="${d.status}"]`);
-    if(drop) drop.innerHTML+=`
-      <div class="deal-card card p-3 text-sm border-l-4 ${d.heat==='Quente'?'border-red-500':d.heat==='Morno'?'border-yellow-500':'border-blue-500'}" draggable="true" ondragstart="drag(event, '${d.id}')" onclick="viewDeal('${d.id}')">
-        <div class="font-bold truncate">${d.title}</div>
-        <div class="text-xs text-gray-500 truncate">${cl?cl.name:'Sem cliente'}</div>
-        <div class="flex justify-between items-center mt-2">
-          <span class="font-semibold text-[var(--primary)]">${fmtMoney(d.value)}</span>
-          <i class="fas fa-fire heat-${d.heat}" title="${d.heat}"></i>
-        </div>
-      </div>`;
-  });
-  $$('.droppable').forEach(el=>{
-    el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('bg-[var(--primary)]','bg-opacity-10');});
-    el.addEventListener('dragleave',e=>el.classList.remove('bg-[var(--primary)]','bg-opacity-10'));
-    el.addEventListener('drop',e=>{
-      e.preventDefault(); el.classList.remove('bg-[var(--primary)]','bg-opacity-10');
-      const id=e.dataTransfer.getData('text/plain'); const d=db.deals.find(x=>x.id===id);
-      if(d && d.status!==el.dataset.status) {
-        if(el.dataset.status==='Fechado/Projeto') return convertToProjectConfirm(d);
-        if(el.dataset.status==='Perdido') return markAsLostConfirm(d);
-        d.status=el.dataset.status; save(); setView('crm');
-      }
-    });
-  });
-}
-window.drag=(e,id)=>e.dataTransfer.setData('text/plain',id);
-window.editDeal=id=>{
-  const d=db.deals.find(x=>x.id===id)||{id:uid(),title:'',clientId:'',value:0,status:'Não contatado',heat:'Frio',notes:'',history:[]};
-  const clOpts=db.clients.map(c=>`<option value="${c.id}" ${c.id===d.clientId?'selected':''}>${c.name}</option>`).join('');
-  openModal(id?'Editar Negócio':'Novo Negócio',`
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="col-span-full"><label class="text-xs">Título*</label><input type="text" id="d-title" value="${d.title}"></div>
-      <div><label class="text-xs">Cliente*</label><select id="d-client"><option value="">Selecione...</option>${clOpts}</select></div>
-      <div><label class="text-xs">Valor Estimado</label><input type="number" id="d-value" value="${d.value}" step="0.01"></div>
-      <div><label class="text-xs">Status</label><select id="d-status">${STATUSES.map(s=>`<option ${s===d.status?'selected':''}>${s}</option>`).join('')}</select></div>
-      <div><label class="text-xs">Temperatura</label><select id="d-heat">${HEAT.map(h=>`<option ${h===d.heat?'selected':''}>${h}</option>`).join('')}</select></div>
-      <div class="col-span-full"><label class="text-xs">Descrição/Notas</label><textarea id="d-notes" rows="3">${d.notes}</textarea></div>
-    </div>
-  `,`<button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveDeal('${d.id}')">Salvar</button>`);
-};
-window.saveDeal=id=>{
-  const title=$('#d-title').value.trim(), cId=$('#d-client').value;
-  if(!title||!cId) return toast('Título e Cliente obrigatórios','error');
-  const ex=db.deals.find(x=>x.id===id);
-  const d={id,title,clientId:cId,value:parseFloat($('#d-value').value)\vert{}\vert{}0,status:$('#d-status').value,heat:$('#d-heat').value,notes:$('#d-notes').value,history:ex?ex.history:[],lossReason:ex?ex.lossReason:''};
-  const idx=db.deals.findIndex(x=>x.id===id);
-  if(idx>-1) db.deals[idx]=d; else db.deals.push(d);
-  save(); closeModal(); setView('crm'); toast('Negócio salvo!');
-};
-window.viewDeal=id=>{
-  const d=db.deals.find(x=>x.id===id); const cl=db.clients.find(x=>x.id===d.clientId);
-  openModal(`Negócio: ${d.title}`,`
-    <div class="flex flex-col md:flex-row gap-4 h-full">
-      <div class="flex-1 space-y-4">
-        <div class="card p-3 bg-[var(--bg)] border-none">
-          <p class="text-xs text-gray-500">Cliente</p><p class="font-bold">${cl?cl.name:'-'}</p>
-          <div class="flex gap-4 mt-2">
-            <div><p class="text-xs text-gray-500">Valor</p><p class="font-semibold text-[var(--primary)]">${fmtMoney(d.value)}</p></div>
-            <div><p class="text-xs text-gray-500">Status</p><p>${d.status} <i class="fas fa-fire heat-${d.heat}"></i></p></div>
-          </div>
-          ${d.lossReason?`<div class="mt-2 text-red-500 text-xs"><b>Motivo Perda:</b> ${d.lossReason}</div>`:''}
-        </div>
-        <div><h4 class="font-bold mb-2">Notas</h4><p class="text-sm whitespace-pre-wrap">${d.notes||'Nenhuma nota.'}</p></div>
-      </div>
-      <div class="flex-1 flex flex-col border-l border-[var(--border)] pl-4">
-        <h4 class="font-bold mb-2">Histórico de Interações</h4>
-        <div class="flex gap-2 mb-4">
-          <select id="h-action" class="w-1/3">${ACTIONS.map(a=>`<option>${a}</option>`).join('')}</select>
-          <input type="text" id="h-desc" placeholder="Detalhes..." class="flex-1">
-          <button class="btn btn-primary" onclick="addHistory('${d.id}')"><i class="fas fa-plus"></i></button>
-        </div>
-        <div class="flex-1 overflow-y-auto space-y-2 text-xs">
-          ${[...d.history].reverse().map(h=>`<div class="p-2 bg-[var(--bg)] rounded"><div class="flex justify-between text-gray-500 mb-1"><span><b>${h.action}</b></span><span>${fmtDate(h.date)}</span></div>${h.desc}</div>`).join('')||'<p class="text-gray-500">Sem histórico.</p>'}
-        </div>
-      </div>
-    </div>
-  `,`
-    <button class="btn btn-outline text-red-500" onclick="delDeal('${d.id}')"><i class="fas fa-trash"></i></button>
-    <button class="btn btn-primary" onclick="editDeal('${d.id}')">Editar</button>
-  `);
-};
-window.addHistory=id=>{
-  const desc=$('#h-desc').value.trim(); if(!desc) return;
-  const d=db.deals.find(x=>x.id===id);
-  d.history.push({date:new Date().toISOString().split('T')[0],action:$('#h-action').value,desc});
-  save(); viewDeal(id);
-};
-window.delDeal=id=>{if(confirm('Excluir negócio?')){db.deals=db.deals.filter(x=>x.id!==id);save();closeModal();setView('crm');toast('Excluído');}};
-window.convertToProjectConfirm=d=>{
-  if(confirm(`Converter "${d.title}" em um Projeto fechado?`)){
-    d.status='Fechado/Projeto';
-    const p={id:uid(),dealId:d.id,clientId:d.clientId,title:d.title,value:d.value,status:'Em Andamento',startDate:new Date().toISOString().split('T')[0],endDate:'',notes:d.notes,schedule:[],receivableId:null};
-    db.projects.push(p); save(); setView('crm'); toast('Convertido em Projeto!');
-  }
-};
-window.markAsLostConfirm=d=>{
-  const reason=prompt(`Motivo da perda para "${d.title}":`);
-  if(reason!==null){d.status='Perdido'; d.lossReason=reason; save(); setView('crm');}
-};
-
-/* ================= PROJETOS ================= */
-function renderProjects(c,h){
-  h.innerHTML=`<button class="btn btn-primary" onclick="editProject()">+ Novo Projeto</button>`;
-  const list=db.projects;
-  c.innerHTML=`<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    ${list.map(p=>{
-      const cl=db.clients.find(x=>x.id===p.clientId);
-      const totalTasks=p.schedule.length; const doneTasks=p.schedule.filter(t=>t.status==='Concluído').length;
-      const pct=totalTasks?Math.round((doneTasks/totalTasks)*100):0;
-      return `
-      <div class="card p-4 flex flex-col gap-2 hover:border-[var(--primary)] cursor-pointer transition-colors" onclick="viewProject('${p.id}')">
-        <div class="flex justify-between items-start"><h3 class="font-bold truncate">${p.title}</h3><span class="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">${p.status}</span></div>
-        <p class="text-xs text-gray-500 truncate">${cl?cl.name:'Sem cliente'}</p>
-        <div class="mt-auto pt-2">
-          <div class="flex justify-between text-xs mb-1"><span>Progresso</span><span>${pct}%</span></div>
-          <div class="w-full bg-gray-200 rounded-full h-1.5"><div class="bg-[var(--primary)] h-1.5 rounded-full" style="width:${pct}%"></div></div>
-        </div>
-      </div>`;
-    }).join('')||'<p class="col-span-full text-center p-4 text-gray-500">Nenhum projeto.</p>'}
-  </div>`;
-}
-window.editProject=id=>{
-  const p=db.projects.find(x=>x.id===id)||{id:uid(),clientId:'',title:'',value:0,status:'Em Andamento',startDate:new Date().toISOString().split('T')[0],endDate:'',notes:'',schedule:[],receivableId:null};
-  const clOpts=db.clients.map(c=>`<option value="${c.id}" ${c.id===p.clientId?'selected':''}>${c.name}</option>`).join('');
-  openModal(id?'Editar Projeto':'Novo Projeto',`
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="col-span-full"><label class="text-xs">Título*</label><input type="text" id="p-title" value="${p.title}"></div>
-      <div><label class="text-xs">Cliente*</label><select id="p-client"><option value="">Selecione...</option>${clOpts}</select></div>
-      <div><label class="text-xs">Valor (R$)</label><input type="number" id="p-value" value="${p.value}" step="0.01"></div>
-      <div><label class="text-xs">Início</label><input type="date" id="p-start" value="${p.startDate}"></div>
-      <div><label class="text-xs">Previsão Fim</label><input type="date" id="p-end" value="${p.endDate}"></div>
-      <div><label class="text-xs">Status</label><select id="p-status"><option ${p.status==='Em Andamento'?'selected':''}>Em Andamento</option><option ${p.status==='Concluído'?'selected':''}>Concluído</option><option ${p.status==='Pausado'?'selected':''}>Pausado</option></select></div>
-      <div class="col-span-full"><label class="text-xs">Descrição</label><textarea id="p-notes" rows="3">${p.notes}</textarea></div>
-    </div>
-  `,`<button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveProject('${p.id}')">Salvar</button>`);
-};
-window.saveProject=id=>{
-  const title=$('#p-title').value.trim(), cId=$('#p-client').value;
-  if(!title||!cId) return toast('Título e Cliente obrigatórios','error');
-  const ex=db.projects.find(x=>x.id===id);
-  const p={id,title,clientId:cId,value:parseFloat($('#p-value').value)||0,startDate:$('#p-start').value,endDate:$('#p-end').value,status:$('#p-status').value,notes:$('#p-notes').value,schedule:ex?ex.schedule:[],receivableId:ex?ex.receivableId:null};
-  const idx=db.projects.findIndex(x=>x.id===id);
-  if(idx>-1) db.projects[idx]=p; else db.projects.push(p);
-  save(); closeModal(); setView('projects'); toast('Projeto salvo!');
-};
-window.viewProject=id=>{
-  const p=db.projects.find(x=>x.id===id); const cl=db.clients.find(x=>x.id===p.clientId);
-  openModal(`Projeto: ${p.title}`,`
-    <div class="flex flex-col md:flex-row gap-4 h-full">
-      <div class="flex-1 space-y-4 overflow-y-auto">
-        <div class="grid grid-cols-2 gap-2 text-sm bg-[var(--bg)] p-3 rounded">
-          <div><span class="text-gray-500 block text-xs">Cliente</span><b>${cl?cl.name:'-'}</b></div>
-          <div><span class="text-gray-500 block text-xs">Status</span><b>${p.status}</b></div>
-          <div><span class="text-gray-500 block text-xs">Período</span><b>${fmtDate(p.startDate)} a ${fmtDate(p.endDate)||'?'}</b></div>
-          <div><span class="text-gray-500 block text-xs">Valor</span><b>${fmtMoney(p.value)}</b></div>
-        </div>
-        <div>
-          <div class="flex justify-between items-center mb-2"><h4 class="font-bold">Cronograma / Entregas</h4></div>
-          <div class="flex gap-2 mb-2">
-            <input type="text" id="sch-task" placeholder="Nova etapa..." class="flex-1 text-sm">
-            <input type="date" id="sch-date" class="w-32 text-sm">
-            <button class="btn btn-primary py-1" onclick="addTask('${p.id}')"><i class="fas fa-plus"></i></button>
-          </div>
-          <div class="space-y-1 text-sm" id="sch-list">
-            ${p.schedule.sort((a,b)=>a.date.localeCompare(b.date)).map(t=>`
-              <div class="flex items-center justify-between p-2 bg-[var(--bg)] rounded border-l-2 ${t.status==='Concluído'?'border-green-500 opacity-60':'border-blue-500'}">
-                <div class="flex items-center gap-2">
-                  <input type="checkbox" ${t.status==='Concluído'?'checked':''} onchange="toggleTask('${p.id}','${t.id}',this.checked)">
-                  <span class="${t.status==='Concluído'?'line-through':''}">${t.task}</span>
-                </div>
-                <div class="flex items-center gap-2 text-xs">
-                  <span class="text-gray-500">${fmtDate(t.date)}</span>
-                  <button class="text-red-500 hover:text-red-700" onclick="delTask('${p.id}','${t.id}')"><i class="fas fa-times"></i></button>
-                </div>
-              </div>`).join('')||'<p class="text-xs text-gray-500">Nenhuma etapa definida.</p>'}
-          </div>
-        </div>
-      </div>
-    </div>
-  `,`
-    ${!p.receivableId && p.value>0 ? `<button class="btn btn-outline text-green-600 border-green-600 mr-auto" onclick="generateReceivable('${p.id}')"><i class="fas fa-file-invoice-dollar"></i> Gerar Recebível</button>`:''}
-    <button class="btn btn-outline text-red-500" onclick="delProject('${p.id}')"><i class="fas fa-trash"></i></button>
-    <button class="btn btn-primary" onclick="editProject('${p.id}')">Editar</button>
-  `);
-};
-window.addTask=id=>{
-  const task=$('#sch-task').value.trim(), date=$('#sch-date').value;
-  if(!task) return;
-  const p=db.projects.find(x=>x.id===id);
-  p.schedule.push({id:uid(),task,date,status:'Pendente'});
-  save(); viewProject(id);
-};
-window.toggleTask=(pid,tid,done)=>{const p=db.projects.find(x=>x.id===pid);const t=p.schedule.find(x=>x.id===tid);if(t){t.status=done?'Concluído':'Pendente';save();viewProject(pid);}};
-window.delTask=(pid,tid)=>{const p=db.projects.find(x=>x.id===pid);p.schedule=p.schedule.filter(x=>x.id!==tid);save();viewProject(pid);};
-window.delProject=id=>{if(confirm('Excluir projeto?')){db.projects=db.projects.filter(x=>x.id!==id);save();closeModal();setView('projects');toast('Excluído');}};
-window.generateReceivable=pid=>{
-  const p=db.projects.find(x=>x.id===pid);
-  const q=parseInt(prompt(`Gerar parcelas para "${p.title}" (R$ ${p.value.toFixed(2)}). Quantas parcelas?`,'1'));
-  if(isNaN(q)||q<1) return;
-  let d=new Date();
-  const insts=[]; const val=p.value/q;
-  for(let i=0;i<q;i++){
-    insts.push({id:uid(),date:d.toISOString().split('T')[0],amount:val,status:'Pendente',payments:[]});
-    d.setMonth(d.getMonth()+1);
-  }
-  const r={id:uid(),clientId:p.clientId,desc:`Projeto: ${p.title}`,total:p.value,installments:insts,status:'Pendente'};
-  db.receivables.push(r); p.receivableId=r.id; save(); toast(`Gerado em ${q}x no Financeiro!`); viewProject(pid);
-};
-
-/* ================= FINANCEIRO ================= */
-function renderFinance(c,h){
-  const t=filters.finTab||'rec';
-  h.innerHTML=`
-    <div class="flex gap-2 bg-[var(--bg)] p-1 rounded">
-      <button class="px-3 py-1 rounded ${t==='rec'?'bg-[var(--card)] shadow font-bold':''}" onclick="filters.finTab='rec';setView('finance')">A Receber</button>
-      <button class="px-3 py-1 rounded ${t==='pay'?'bg-[var(--card)] shadow font-bold':''}" onclick="filters.finTab='pay';setView('finance')">A Pagar</button>
-    </div>
-    <button class="btn btn-primary" onclick="${t==='rec'?'editRec()':'editPay()'}">+ Novo</button>
-  `;
-  refreshOverdue(db);
-  if(t==='rec') renderReceivables(c); else renderPayables(c);
-}
-
-function renderReceivables(c){
-  const list=db.receivables;
-  c.innerHTML=`<div class="card overflow-x-auto"><table class="w-full text-left border-collapse">
-    <thead class="bg-[var(--bg)] border-b border-[var(--border)]"><tr><th class="p-3">Descrição / Cliente</th><th class="p-3">Total</th><th class="p-3">Status</th><th class="p-3">Progresso</th><th class="p-3">Ações</th></tr></thead>
-    <tbody>${list.map(r=>{
-      const cl=db.clients.find(x=>x.id===r.clientId);
-      const paid=r.installments.reduce((s,i)=>s+i.payments.reduce((ps,p)=>ps+p.amount,0),0);
-      const pct=Math.round((paid/r.total)*100)||0;
-      return `
-      <tr class="border-b border-[var(--border)] hover:bg-[var(--bg)]">
-        <td class="p-3"><div class="font-bold">${r.desc}</div><div class="text-xs text-gray-500">${cl?cl.name:'-'}</div></td>
-        <td class="p-3 font-semibold">${fmtMoney(r.total)}</td>
-        <td class="p-3"><span class="text-xs font-bold ${r.status==='Pago'?'text-green-500':r.status==='Atrasado'?'text-red-500':'text-yellow-500'}">${r.status}</span></td>
-        <td class="p-3"><div class="w-24 bg-gray-200 rounded-full h-1.5 mt-1"><div class="bg-green-500 h-1.5 rounded-full" style="width:${pct}%"></div></div><div class="text-[10px] text-gray-500 mt-1">${fmtMoney(paid)} pago</div></td>
-        <td class="p-3 space-x-2">
-          <button class="btn btn-outline py-1 text-xs" onclick="viewRec('${r.id}')">Parcelas</button>
-          <button class="text-red-500 hover:text-red-700" onclick="delRec('${r.id}')"><i class="fas fa-trash"></i></button>
-        </td>
-      </tr>`;
-    }).join('')||'<tr><td colspan="5" class="p-4 text-center">Nada a receber.</td></tr>'}</tbody></table></div>`;
-}
-window.editRec=()=>{
-  const clOpts=db.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
-  openModal('Novo Recebimento',`
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="col-span-full"><label class="text-xs">Descrição*</label><input type="text" id="r-desc"></div>
-      <div><label class="text-xs">Cliente*</label><select id="r-client"><option value="">Selecione...</option>${clOpts}</select></div>
-      <div><label class="text-xs">Valor Total (R$)*</label><input type="number" id="r-total" step="0.01"></div>
-      <div><label class="text-xs">1º Vencimento*</label><input type="date" id="r-date" value="${new Date().toISOString().split('T')[0]}"></div>
-      <div><label class="text-xs">Qtd. Parcelas</label><input type="number" id="r-qty" value="1" min="1"></div>
-    </div>
-  `,`<button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="createRec()">Gerar</button>`);
-};
-window.createRec=()=>{
-  const desc=$('#r-desc').value.trim(), cId=$('#r-client').value, total=parseFloat($('#r-total').value), dt=$('#r-date').value, q=parseInt($('#r-qty').value);
-  if(!desc||!cId||isNaN(total)||total<=0||!dt||isNaN(q)||q<1) return toast('Preencha os campos obrigatórios corretamente.','error');
-  let d=new Date(dt+'T00:00:00'); const insts=[]; const val=total/q;
-  for(let i=0;i<q;i++){ insts.push({id:uid(),date:d.toISOString().split('T')[0],amount:val,status:'Pendente',payments:[]}); d.setMonth(d.getMonth()+1); }
-  db.receivables.push({id:uid(),clientId:cId,desc,total,installments:insts,status:'Pendente'});
-  save(); closeModal(); setView('finance'); toast('Recebimento gerado!');
-};
-window.delRec=id=>{if(confirm('Excluir este registro?')){
-  const r=db.receivables.find(x=>x.id===id);
-  const p=db.projects.find(x=>x.receivableId===id); if(p) p.receivableId=null;
-  db.receivables=db.receivables.filter(x=>x.id!==id); save(); setView('finance'); toast('Excluído');
-}};
-window.viewRec=id=>{
-  const r=db.receivables.find(x=>x.id===id);
-  openModal(`Parcelas: ${r.desc}`,`
-    <div class="space-y-2">
-      ${r.installments.map((i,idx)=>{
-        const paid=i.payments.reduce((s,p)=>s+p.amount,0); const pend=i.amount-paid;
-        return `
-        <div class="card p-3 flex flex-col gap-2 border-l-4 ${i.status==='Pago'?'border-green-500':i.status==='Atrasado'?'border-red-500':'border-yellow-500'}">
-          <div class="flex justify-between items-center">
-            <div><span class="font-bold">${idx+1}ª Parcela</span><span class="text-xs text-gray-500 ml-2">Venc: ${fmtDate(i.date)}</span></div>
-            <div class="text-right"><div class="font-semibold">${fmtMoney(i.amount)}</div><div class="text-xs ${i.status==='Pago'?'text-green-500':'text-gray-500'}">${i.status} (${fmtMoney(paid)} pago)</div></div>
-          </div>
-          ${pend>0?`<div class="flex gap-2 mt-2 pt-2 border-t border-[var(--border)]"><input type="number" id="pay-amt-${i.id}" value="${pend.toFixed(2)}" step="0.01" class="w-24 text-sm"><input type="date" id="pay-dt-${i.id}" value="${new Date().toISOString().split('T')[0]}" class="w-32 text-sm"><button class="btn btn-primary py-1 text-xs flex-1" onclick="receiveInst('${r.id}','${i.id}')">Baixar Valor</button></div>`:''}
-        </div>`;
-      }).join('')}
-    </div>
-  `,'<button class="btn btn-outline" onclick="closeModal()">Fechar</button>');
-};
-window.receiveInst=(rid,iid)=>{
-  const amt=parseFloat($(`#pay-amt-${iid}`).value), dt=$(`#pay-dt-${iid}`).value;
-  if(isNaN(amt)||amt<=0||!dt) return;
-  const r=db.receivables.find(x=>x.id===rid); const i=r.installments.find(x=>x.id===iid);
-  i.payments.push({id:uid(),date:dt,amount:amt}); save(); viewRec(rid); refreshOverdue(db); if($('#app').classList.contains('hidden')===false&&currentView==='finance') setView('finance');
-};
-
-function renderPayables(c){
-  const list=db.payables;
-  c.innerHTML=`<div class="card overflow-x-auto"><table class="w-full text-left border-collapse">
-    <thead class="bg-[var(--bg)] border-b border-[var(--border)]"><tr><th class="p-3">Descrição / Categoria</th><th class="p-3">Valor</th><th class="p-3">Vencimento</th><th class="p-3">Status</th><th class="p-3">Ações</th></tr></thead>
-    <tbody>${list.map(p=>{
-      const paid=p.payments.reduce((s,py)=>s+py.amount,0);
-      return `
-      <tr class="border-b border-[var(--border)] hover:bg-[var(--bg)]">
-        <td class="p-3"><div class="font-bold">${p.desc}</div><div class="text-xs text-gray-500">${p.category\vert{}\vert{}'-'}${p.recurring?'(Fixo)':''}</div></td>
-        <td class="p-3 font-semibold">${fmtMoney(p.amount)} <div class="text-[10px] text-gray-500">${fmtMoney(paid)} pago</div></td>
-        <td class="p-3">${fmtDate(p.dueDate)}</td>
-        <td class="p-3"><span class="text-xs font-bold ${p.status==='Pago'?'text-green-500':p.status==='Atrasado'?'text-red-500':'text-yellow-500'}">${p.status}</span></td>
-        <td class="p-3 space-x-2">
-          ${p.status!=='Pago'?`<button class="btn btn-outline py-1 text-xs" onclick="payModal('${p.id}')">Pagar</button>`:''}
-          <button class="text-red-500 hover:text-red-700" onclick="delPay('${p.id}')"><i class="fas fa-trash"></i></button>
-        </td>
-      </tr>`;
-    }).join('')||'<tr><td colspan="5" class="p-4 text-center">Nada a pagar.</td></tr>'}</tbody></table></div>`;
-}
-window.editPay=()=>{
-  openModal('Nova Despesa',`
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="col-span-full"><label class="text-xs">Descrição*</label><input type="text" id="p-desc"></div>
-      <div><label class="text-xs">Categoria</label><input type="text" id="p-cat" placeholder="Ex: Impostos, Software..."></div>
-      <div><label class="text-xs">Valor (R$)*</label><input type="number" id="p-amt" step="0.01"></div>
-      <div><label class="text-xs">Vencimento*</label><input type="date" id="p-date" value="${new Date().toISOString().split('T')[0]}"></div>
-      <div class="flex items-center mt-6"><label class="flex items-center gap-2 cursor-pointer text-sm"><input type="checkbox" id="p-rec"> Despesa Fixa / Recorrente</label></div>
-    </div>
-  `,`<button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="createPay()">Salvar</button>`);
-};
-window.createPay=()=>{
-  const desc=$('#p-desc').value.trim(), amt=parseFloat($('#p-amt').value), dt=$('#p-date').value;
-  if(!desc||isNaN(amt)||amt<=0||!dt) return toast('Preencha os campos obrigatórios.','error');
-  db.payables.push({id:uid(),desc,category:$('#p-cat').value,amount:amt,dueDate:dt,recurring:$('#p-rec').checked,status:'Pendente',payments:[]});
-  save(); closeModal(); setView('finance'); toast('Despesa salva!');
-};
-window.delPay=id=>{if(confirm('Excluir despesa?')){db.payables=db.payables.filter(x=>x.id!==id);save();setView('finance');toast('Excluída');}};
-window.payModal=id=>{
-  const p=db.payables.find(x=>x.id===id); const paid=p.payments.reduce((s,py)=>s+py.amount,0); const pend=p.amount-paid;
-  openModal(`Baixar Despesa: ${p.desc}`,`
-    <div class="space-y-4">
-      <div class="flex justify-between"><span>Valor Pendente:</span><span class="font-bold text-red-500">${fmtMoney(pend)}</span></div>
-      <div><label class="text-xs">Valor a Pagar</label><input type="number" id="pay-amt" value="${pend.toFixed(2)}" step="0.01"></div>
-      <div><label class="text-xs">Data do Pagamento</label><input type="date" id="pay-dt" value="${new Date().toISOString().split('T')[0]}"></div>
-    </div>
-  `,`<button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="execPay('${p.id}')">Confirmar Pagamento</button>`);
-};
-window.execPay=id=>{
-  const amt=parseFloat($('#pay-amt').value), dt=$('#pay-dt').value; if(isNaN(amt)||amt<=0||!dt) return;
-  const p=db.payables.find(x=>x.id===id);
-  p.payments.push({id:uid(),date:dt,amount:amt});
-  // Se for recorrente e pagou total, recria pro proximo mes
-  const paid=p.payments.reduce((s,py)=>s+py.amount,0);
-  if(paid>=p.amount && p.recurring){
-    let d=new Date(p.dueDate+'T00:00:00'); d.setMonth(d.getMonth()+1);
-    db.payables.push({id:uid(),desc:p.desc,category:p.category,amount:p.amount,dueDate:d.toISOString().split('T')[0],recurring:true,status:'Pendente',payments:[]});
-    p.recurring=false; // A original deixa de ser a matriz
-  }
-  save(); closeModal(); refreshOverdue(db); setView('finance'); toast('Pagamento registrado!');
-};
-
-/* ================= RELATÓRIOS ================= */
-function renderReports(c,h){
-  const m=new Date().toISOString().slice(0,7);
-  const mStr=`${m.split('-')[1]}/${m.split('-')[0]}`;
-  c.innerHTML=`
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-      <div class="card p-4">
-        <h3 class="font-bold mb-4">Resumo do Mês (${mStr})</h3>
-        <button class="btn btn-outline w-full mb-2 flex justify-between" onclick="genReportPDF('financeiro')"><span>Fluxo de Caixa</span><i class="fas fa-file-pdf text-red-500"></i></button>
-        <button class="btn btn-outline w-full mb-2 flex justify-between" onclick="genReportPDF('vendas')"><span>Vendas / Funil</span><i class="fas fa-file-pdf text-red-500"></i></button>
-      </div>
-    </div>
-  `;
-}
-window.genReportPDF=type=>{
-  const {jsPDF}=window.jspdf; const doc=new jsPDF(); const m=new Date().toISOString().slice(0,7);
-  doc.setFontSize(18); doc.text(`Relatório de ${type==='financeiro'?'Financeiro':'Vendas'}`,14,22); doc.setFontSize(10); doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} - Crittus Flow`,14,30);
-  let y=40;
-  if(type==='financeiro'){
-    const rev=db.receivables.flatMap(r=>r.installments).filter(i=>i.date.startsWith(m)&&i.status==='Pago').reduce((s,i)=>s+(i.payments.reduce((ps,p)=>ps+p.amount,0)),0);
-    const exp=db.payables.filter(p=>p.dueDate.startsWith(m)&&p.status==='Pago').reduce((s,p)=>s+(p.payments.reduce((ps,py)=>ps+py.amount,0)),0);
-    doc.text(`Receitas (Pagamento no mês): ${fmtMoney(rev)}`,14,y); y+=10;
-    doc.text(`Despesas (Pagas no mês): ${fmtMoney(exp)}`,14,y); y+=10;
-    doc.text(`Saldo: ${fmtMoney(rev-exp)}`,14,y);
-  }else{
-    const total=db.deals.length; const won=db.deals.filter(d=>d.status==='Fechado/Projeto').length;
-    doc.text(`Total de Negócios: ${total}`,14,y); y+=10;
-    doc.text(`Negócios Fechados: ${won} (${total?Math.round((won/total)*100):0}%)`,14,y); y+=15;
-    doc.text('Distribuição por Status:',14,y); y+=10;
-    STATUSES.forEach(s=>{doc.text(`- ${s}: ${db.deals.filter(d=>d.status===s).length}`,14,y); y+=8;});
-  }
-  doc.save(`relatorio_${type}_${m}.pdf`); toast('PDF Gerado!');
-};
-
-/* ================= CONFIGURAÇÕES ================= */
-function renderSettings(c,h){
-  c.innerHTML=`
-    <div class="card p-4 max-w-2xl mx-auto space-y-6">
-      <div><h3 class="font-bold text-lg mb-2">Dados do Sistema (Nuvem Firebase)</h3>
-      <p class="text-sm text-gray-500 mb-4">Os seus dados estão a ser guardados automaticamente na nuvem da Google (Firebase) em tempo real.</p>
-      </div>
-      <div class="border-t border-[var(--border)] pt-4">
-        <h3 class="font-bold mb-2">Backup Manual</h3>
-        <p class="text-sm text-gray-500 mb-4">Ainda pode exportar uma cópia local por segurança.</p>
-        <div class="flex gap-2">
-          <button class="btn btn-outline" onclick="exportData()"><i class="fas fa-download"></i> Exportar JSON</button>
-          <label class="btn btn-outline cursor-pointer"><i class="fas fa-upload"></i> Importar JSON<input type="file" hidden accept=".json" onchange="importData(event)"></label>
-        </div>
-      </div>
-      <div class="border-t border-red-200 pt-4">
-        <h3 class="font-bold text-red-500 mb-2">Zona de Perigo</h3>
-        <button class="btn bg-red-100 text-red-600 hover:bg-red-200" onclick="clearData()">Apagar Todos os Dados da Nuvem</button>
-      </div>
-    </div>
-  `;
-}
-window.exportData=()=>{
-  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`crittus_flow_backup_${new Date().toISOString().split('T')[0]}.json`;
-  a.click(); toast('Backup exportado');
-};
-window.importData=e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const r=new FileReader(); r.onload=ev=>{
-    try{const d=JSON.parse(ev.target.result); db=migrate(d); save(); setView('settings'); toast('Dados restaurados!');}
-    catch(err){toast('Arquivo inválido','error')}
-  }; r.readAsText(f);
-};
-window.clearData=()=>{
-  if(prompt('Escreva "APAGAR" para confirmar a exclusão de TODOS os dados (Clientes, Negócios, Financeiro) da nuvem.')==='APAGAR'){
-    db={clients:[],deals:[],projects:[],payables:[],receivables:[]}; save(); setView('dashboard'); toast('Base de dados limpa.','error');
-  }
-};
-
-</script>
-</body>
-</html>
+function refreshOverdue(d=db){const t=today();d.projects.forEach(p=>p.schedule.forEach(a=>{if(a.date&&a.date<t&&a.status!=='Concluído')a.status='Vencido'}))}
+function localDate(date=new Date()){return new Date(date.getTime()-3*60*60*1000).toISOString().slice(0,10)}
+function today(){return localDate()}function monthStart(){return today().slice(0,7)+'-01'}
+function brl(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}function dateBR(d){if(!d)return '—';const [y,m,day]=d.split('-');return `${day}/${m}/${y}`}
+function toast(msg,type='ok'){const t=$('#toast');t.textContent=msg;t.style.borderColor=type==='error'?'#8d2338':'var(--line)';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
+function clientName(id){return db.clients.find(c=>c.id===id)?.name||'—'}function client(id){return db.clients.find(c=>c.id===id)}function clientBlocked(id){return client(id)?.status==='Bloqueado'}function projectName(id){return db.projects.find(p=>p.id===id)?.name||'—'}
+function badge(v){if(!v)return '<span class="badge">—</span>';const auto=/parcial/i.test(v)?'orange':/conclu|pago|recebido|fechado|ativo/i.test(v)?'green':/vencid|perdido|bloqueado/i.test(v)?'red':/execução|proposta|quente/i.test(v)?'purple':/pendente|não|em aberto/i.test(v)?'orange':'';return `<span class="badge ${auto}">${esc(v)}</span>`}
+function login(){if($('#loginUser').value.trim()==='admin'&&$('#loginPass').value==='24121103'){$('#login').classList.add('hidden');$('#app').classList.remove('hidden');setView('dashboard')}else $('#loginError').classList.remove('hidden')}
+function logout(){$('#app').classList.add('hidden');$('#login').classList.remove('hidden')} function setView(v,btn){currentView=v;filters={};if(btn){$$('.nav button[data-view]').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}({dashboard:renderDashboard,clients:renderClients,deals:renderDeals,projects:renderProjects,agenda:renderAgenda,payables:renderPayables,receivables:renderReceivables})[v]();window.scrollTo(0,0)}
+function page(title,sub,actions,body){$('#main').innerHTML=`<div class="page-head"><div><h1>${title}</h1><p>${sub}</p></div><div class="head-actions">${actions||''}</div></div>${body}`}
+function section(t,sub,c,right=''){return `<section class="section"><div class="section-title"><div><h2>${t}</h2>${sub?`<span class="small">${sub}</span>`:''}</div>${right}</div>${c}</section>`}
+function tableCard(title,count,cols,rows,empty='Nenhum registro encontrado.',cta=''){return `<div class="card table-card"><div class="table-head"><div><h3>${title}</h3><span class="small">${count} registro(s)</span></div></div><div class="table-scroll"><table class="table"><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${rows||`<tr><td colspan="${cols.length}" class="empty">${empty}${cta?`<div style="margin-top:14px">${cta}</div>`:''}</td></tr>`}</tbody></table></div></div>`}
+function debounce(fn,ms=280){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
+const searchDeals=debounce(v=>{filters.q=v;renderDeals()},280),searchClients=debounce(v=>{filters.q=v;renderClients()},280);
+function clientOptions(sel=''){return `<option value="">Selecione um cliente</option>`+db.clients.map(c=>`<option value="${c.id}" ${c.id===sel?'selected':''}>${esc(c.name)}${c.status==='Bloqueado'?' — BLOQUEADO':''}</option>`).join('')}
+function paidSum(x){return (x.payments||[]).reduce((s,p)=>s+Number(p.value||0),0)}
+function instPaid(i){return (i.payments||[]).reduce((s,p)=>s+Number(p.value||0),0)}
+function instRemaining(i){return Math.max(0,Number(i.value||0)-instPaid(i))}
+function instStatus(i){const paid=instPaid(i);if(paid>=Number(i.value||0))return 'Recebido';if(paid>0)return 'Recebido parcial';if(i.due&&i.due<today())return 'Vencida';return 'Em aberto'}
+function recTotal(r){return (r.installments||[]).reduce((s,i)=>s+Number(i.value||0),0)}function recPaid(r){return (r.installments||[]).reduce((s,i)=>s+instPaid(i),0)}
+function renderDashboard(){const m=filters.month||today().slice(0,7);const recPrev=db.receivables.flatMap(r=>r.installments||[]).filter(i=>i.due.startsWith(m)).reduce((s,i)=>s+Number(i.value||0),0);const recReal=db.receivables.flatMap(r=>r.installments||[]).flatMap(i=>i.payments||[]).filter(p=>p.date.startsWith(m)).reduce((s,p)=>s+Number(p.value||0),0);const recOpen=db.receivables.reduce((s,r)=>s+recTotal(r)-recPaid(r),0);const payPrev=db.payables.filter(p=>p.due.startsWith(m)).reduce((s,p)=>s+Number(p.value||0),0);const payReal=db.payables.flatMap(p=>p.payments||[]).filter(p=>p.date.startsWith(m)).reduce((s,p)=>s+Number(p.value||0),0);const payOpen=db.payables.reduce((s,p)=>s+Number(p.value||0)-paidSum(p),0);const hot=db.deals.filter(d=>d.heat==='Quente'&&d.status!=='Fechado/Projeto'&&d.status!=='Perdido');const late=db.deals.filter(d=>d.nextDate&&d.nextDate<today()&&d.status!=='Fechado/Projeto'&&d.status!=='Perdido');const counts=STATUSES.map(s=>db.deals.filter(d=>d.status===s).length),max=Math.max(1,...counts);const bars=STATUSES.map((s,i)=>`<div class="bar-wrap"><div style="font-weight:900">${counts[i]}</div><div class="bar ${s==='Fechado/Projeto'?'green':s==='Perdido'?'red':''}" style="height:${Math.max(6,counts[i]/max*100)}%"></div><div class="bar-label">${esc(s)}</div></div>`).join('');page('Dashboard','Caixa, pipeline e execução com visão de previsto, realizado e saldo.','',`<div class="card"><div class="filters"><div><label>Mês de referência</label><input type="month" value="${m}" onchange="filters.month=this.value;renderDashboard()"></div></div><div class="grid metrics"><div class="card"><div class="metric-label">A receber — previsto</div><div class="metric-value primary">${brl(recPrev)}</div><div class="metric-sub">Vencimentos do mês</div></div><div class="card"><div class="metric-label">A receber — realizado</div><div class="metric-value good">${brl(recReal)}</div><div class="metric-sub">Recebimentos do mês</div></div><div class="card"><div class="metric-label">A receber — saldo aberto</div><div class="metric-value warn">${brl(recOpen)}</div><div class="metric-sub">Parcelas em aberto</div></div><div class="card"><div class="metric-label">Resultado realizado</div><div class="metric-value ${recReal-payReal>=0?'good':'bad'}">${brl(recReal-payReal)}</div><div class="metric-sub">Recebido menos pago no mês</div></div></div><div class="grid metrics" style="margin-top:14px"><div class="card"><div class="metric-label">A pagar — previsto</div><div class="metric-value warn">${brl(payPrev)}</div><div class="metric-sub">Vencimentos do mês</div></div><div class="card"><div class="metric-label">A pagar — realizado</div><div class="metric-value bad">${brl(payReal)}</div><div class="metric-sub">Pagamentos do mês</div></div><div class="card"><div class="metric-label">A pagar — saldo aberto</div><div class="metric-value">${brl(payOpen)}</div><div class="metric-sub">Compromissos em aberto</div></div><div class="card"><div class="metric-label">Follow-ups atrasados</div><div class="metric-value ${late.length?'bad':''}">${late.length}</div><div class="metric-sub">Oportunidades exigindo contato</div></div></div></div>${section('Pipeline comercial','Distribuição atual das oportunidades.',`<div class="card"><div class="bar-chart">${bars}</div></div>`)}${section('Prioridades comerciais','Oportunidades quentes e follow-ups atrasados.',tableCard('Prioridades',hot.length+late.length,['Cliente','Oportunidade','Valor','Engajamento','Próxima ação','Data',''],[...hot,...late].filter((v,i,a)=>a.indexOf(v)===i).map(d=>`<tr><td class="primary-cell">${esc(clientName(d.clientId))}</td><td>${esc((d.description\vert{}\vert{}'').slice(0,55))}</td><td>${brl(d.value)}</td><td>${badge(d.heat)}</td><td>${esc(d.nextAction||'—')}</td><td class="${d.nextDate&&d.nextDate<today()?'bad':''}">${dateBR(d.nextDate)}</td></tr>`).join(''),'Nenhuma prioridade comercial.','<button class="btn small" onclick="setView(\'deals\')">Ver negociações</button>'))}`)}
+function renderClients(){const q=(filters.q||'').toLowerCase(),type=filters.type||'';const list=db.clients.filter(c=>(!q||[c.name,c.doc,c.city,c.email,c.phone,c.instagram].join(' ').toLowerCase().includes(q))&&(!type||c.type===type));const rows=list.map(c=>`<tr><td class="primary-cell">${esc(c.name)}${c.trade?`<div class="secondary-cell">${esc(c.trade)}</div>`:''}</td><td>${c.type==='PF'?'PF':'PJ'}</td><td>${badge(c.status||'Ativo')}</td><td>${esc(c.city||'—')}</td><td>${esc(c.phone||'—')}</td><td>${c.instagram?`<a target="_blank" href="https://instagram.com/${String(c.instagram).replace('@','')}">${esc(c.instagram)}</a>`:'—'}</td><td><div class="row-actions"><button class="btn small" onclick="openClient('${c.id}')">Abrir</button><button class="btn small ghost" onclick="clientMenu('${c.id}')">⋯</button></div></td></tr>`).join('');page('Clientes','Base de relacionamentos, canais e vínculos comerciais.','<button class="btn" onclick="openClientForm()">+ Novo cliente</button>',`<div class="card"><div class="filters"><div class="search"><label>Buscar</label><input value="${esc(filters.q||'')}" placeholder="Nome, documento, cidade..." oninput="searchClients(this.value)"></div><div><label>Tipo</label><select onchange="filters.type=this.value;renderClients()"><option value="">Todos</option><option value="PF">Pessoa Física</option><option value="PJ">Pessoa Jurídica</option></select></div></div></div>${section('Clientes cadastrados','Use o menu ⋯ para ações rápidas.',tableCard('Clientes',list.length,['Cliente','Tipo','Status','Cidade','Telefone','Instagram',''],rows,'Nenhum cliente cadastrado ainda.','<button class="btn small" onclick="openClientForm()">Cadastrar primeiro cliente</button>'))}`)}
+function clientMenu(id){const c=client(id);openModal(c.name,`<div class="detail-grid"><div class="detail"><div class="k">Status</div><div class="v">${badge(c.status||'Ativo')}</div></div><div class="detail"><div class="k">Contato</div><div class="v">${esc(c.phone||'—')}<br>${esc(c.email||'—')}</div></div></div>`,`<button class="btn secondary" onclick="closeModal()">Fechar</button><button class="btn ghost" onclick="closeModal();openDealForm('','${id}')">+Oportunidade</button><button class="btn ghost" onclick="closeModal();openProjectForm('','${id}')">+Projeto</button><button class="btn secondary" onclick="closeModal();openClientForm('${id}')">Editar</button><button class="btn danger" onclick="deleteClient('${id}')">Excluir</button>`)}
+function openClientForm(id){const c=id?client(id):{type:'PF',status:'Ativo',networks:[]};openModal(id?'Editar cliente':'Novo cliente',`<form id="clientForm"><div class="form-grid"><fieldset class="span2"><legend>Identificação</legend><div class="form-grid"><div><label>Tipo</label><select name="type" onchange="clientTypeFields(this.value)"><option value="PF">Pessoa Física</option><option value="PJ">Pessoa Jurídica</option></select></div><div><label>Status</label><select name="status"><option value="Ativo">Ativo</option><option value="Bloqueado">Bloqueado</option></select></div><div id="clientTypeFields"></div></div></fieldset><fieldset class="span2"><legend>Contato</legend><div class="form-grid"><div><label>Cidade / UF</label><input name="city" value="${esc(c.city||'')}"></div><div><label>E-mail</label><input name="email" type="email" value="${esc(c.email||'')}"></div><div><label>Telefone / WhatsApp</label><input name="phone" value="${esc(c.phone||'')}"></div><div><label>Instagram</label><input name="instagram" value="${esc(c.instagram||'')}"></div></div></fieldset><fieldset class="span2"><legend>Redes trabalhadas</legend><div class="checks">${NETWORKS.map(n=>`<label><input type="checkbox" name="networks" value="${n}" ${(c.networks\vert{}\vert{}[]).includes(n)?'checked':''}>${n}</label>`).join('')}</div></fieldset></div></form>`,`<button class="btn secondary" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveClient('${id||''}')">Salvar</button>`);$('#clientForm [name=type]').value=c.type\vert{}\vert{}'PF';$('#clientForm [name=status]').value=c.status||'Ativo';clientTypeFields(c.type||'PF',c)}
+function clientTypeFields(type,c={}){$('#clientTypeFields').innerHTML=type==='PF'?`<div class="form-grid"><div><label>Nome completo *</label><input name="name" required value="${esc(c.name||'')}"></div><div><label>CPF</label><input name="doc" value="${esc(c.doc||'')}"></div><div><label>Marca</label><input name="brand" value="${esc(c.brand||'')}"></div></div>`:`<div class="form-grid"><div><label>Razão social *</label><input name="name" required value="${esc(c.name||'')}"></div><div><label>Nome fantasia</label><input name="trade" value="${esc(c.trade||'')}"></div><div><label>CNPJ</label><input name="doc" value="${esc(c.doc||'')}"></div><div><label>Telefone empresa</label><input name="companyPhone" value="${esc(c.companyPhone||'')}"></div><div><label>Representante</label><input name="rep" value="${esc(c.rep||'')}"></div></div>`}
+function saveClient(id){const f=$('#clientForm');if(!f.reportValidity())return;const d=formData(f);d.networks=$$('[name=networks]:checked').map(x=>x.value);if(id)Object.assign(client(id),d);else{d.id=uid();d.createdAt=today();db.clients.push(d)}save();closeModal();renderClients();toast('Cliente salvo.')}
+function openClient(id){const c=client(id);openModal(c.name,`<div class="detail-grid">${[['Status',c.status||'Ativo'],['Documento',c.doc||'—'],['Cidade',c.city||'—'],['E-mail',c.email||'—'],['Telefone',c.phone||'—'],['Instagram',c.instagram||'—'],['Redes',(c.networks||[]).join(', ')||'—']].map(([k,v])=>`<div class="detail"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`).join('')}</div>`,`<button class="btn secondary" onclick="closeModal()">Fechar</button><button class="btn" onclick="closeModal();openClientForm('${id}')">Editar</button>`)}
+function deleteClient(id){const used=db.deals.some(d=>d.clientId===id)||db.projects.some(p=>p.clientId===id)||db.receivables.some(r=>r.clientId===id);if(used)return toast('Cliente possui vínculos. Bloqueie em vez de excluir.','error');if(confirm('Excluir cliente?')){db.clients=db.clients.filter(c=>c.id!==id);save();renderClients()}}
+function renderDeals(){const q=(filters.q||'').toLowerCase();const list=db.deals.filter(d=>!q||[clientName(d.clientId),d.description,d.notes].join(' ').toLowerCase().includes(q));const kanban=STATUSES.map(s=>`<div class="kanban-col"><h4>${esc(s)}</h4>${list.filter(d=>d.status===s).map(d=>`<div class="deal-card"><b>${esc(clientName(d.clientId))}</b><div class="secondary-cell">${esc((d.description||'').slice(0,60))}</div><div class="secondary-cell">${brl(d.value)} ·${badge(d.heat)}</div><div class="row-actions" style="margin-top:8px"><button class="btn small ghost" onclick="moveDeal('${d.id}',-1)">←</button><button class="btn small" onclick="openDeal('${d.id}')">Abrir</button><button class="btn small ghost" onclick="moveDeal('${d.id}',1)">→</button></div></div>`).join('')||'<div class="secondary-cell">Sem oportunidades.</div>'}</div>`).join('');const rows=list.map(d=>`<tr><td class="primary-cell">${esc(clientName(d.clientId))}<div class="secondary-cell">${esc((d.description||'').slice(0,55))}</div></td><td>${brl(d.value)}</td><td>${badge(d.status)}</td><td>${badge(d.heat)}</td><td class="${d.nextDate&&d.nextDate<today()?'bad':''}">${dateBR(d.nextDate)}</td><td><div class="row-actions"><button class="btn small" onclick="openDeal('${d.id}')">Abrir</button><button class="btn small ghost" onclick="dealMenu('${d.id}')">⋯</button></div></td></tr>`).join('');page('Negociações','Pipeline visual, histórico comercial e conversão em projetos.','<button class="btn" onclick="openDealForm()">+ Nova oportunidade</button>',`${section('Kanban comercial','Use as setas para avançar ou retroceder.',`<div class="kanban">${kanban}</div>`)}${section('Lista de negociações','',tableCard('Oportunidades',list.length,['Cliente','Valor','Status','Engajamento','Próxima ação',''],rows))}`)}
+function dealMenu(id){openModal('Ações da negociação','',`<button class="btn secondary" onclick="closeModal()">Fechar</button><button class="btn ghost" onclick="closeModal();openDealForm('${id}')">Editar</button><button class="btn ghost" onclick="closeModal();dealToProject('${id}')">Virar Projeto</button><button class="btn danger" onclick="deleteDeal('${id}')">Excluir</button>`)}
+function moveDeal(id,dir){const d=db.deals.find(x=>x.id===id);if(d.status==='Perdido'||d.status==='Fechado/Projeto')return toast('Negociação congelada.','error');const i=STATUSES.indexOf(d.status)+dir;if(i<0||i>=STATUSES.length)return;d.status=STATUSES[i];if(d.status==='Perdido'&&!d.lossReason){const reason=prompt('Motivo da perda (obrigatório):');if(!reason){d.status='Proposta';return}d.lossReason=reason;d.history.push({date:today(),type:'Perda',note:reason})}if(d.status==='Fechado/Projeto'){const p=createProjectFromDeal(d);save();closeModal();projectCreatedPopup(p);return}d.history.push({date:today(),type:'Status',note:d.status});save();renderDeals()}
+function openDealForm(id,presetClientId=''){const d=id?db.deals.find(x=>x.id===id):{status:'Não contatado',heat:'Frio',nextAction:'Telefone',clientId:presetClientId,history:[]};const cid=d.clientId||presetClientId;if(id&&(d.status==='Perdido'||d.status==='Fechado/Projeto'))return toast('Negociação congelada.','error');if(!id&&clientBlocked(cid))return alert('Impossível criar novas negociações pois o cliente está bloqueado.');openModal(id?'Editar negociação':'Nova oportunidade',`<form id="dealForm"><div class="form-grid"><fieldset class="span2"><legend>Vínculo comercial</legend><div class="form-grid"><div><label>Cliente *</label><select name="clientId" required>${clientOptions(cid)}</select></div><div><label>Novo cliente</label><button type="button" class="btn secondary full" onclick="closeModal();setView('clients')">+ Ir para Clientes</button></div><div class="span2"><label>Descrição *</label><textarea name="description" required>${esc(d.description||'')}</textarea></div></div></fieldset><fieldset class="span2"><legend>Comercial</legend><div class="form-grid"><div><label>Valor</label><input name="value" type="number" step="0.01" value="${d.value||''}"></div><div><label>Previsão</label><input name="closeDate" type="date" value="${d.closeDate||''}"></div><div><label>Status</label><select name="status" onchange="dealStatusFields(this.value)">${STATUSES.map(s=>`<option ${d.status===s?'selected':''}>${s}</option>`).join('')}</select></div><div><label>Engajamento</label><select name="heat">${HEAT.map(s=>`<option ${d.heat===s?'selected':''}>${s}</option>`).join('')}</select></div><div><label>Próxima ação</label><select name="nextAction">${ACTIONS.map(s=>`<option ${d.nextAction===s?'selected':''}>${s}</option>`).join('')}</select></div><div><label>Data próxima ação</label><input name="nextDate" type="date" value="${d.nextDate||''}"></div><div class="span2"><label>Orientação para próxima interação</label><textarea name="notes">${esc(d.notes||'')}</textarea></div><div class="span2 hidden" id="lossField"><label>Motivo da perda *</label><input name="lossReason" value="${esc(d.lossReason||'')}"></div></div></fieldset></div></form>`,`<button class="btn secondary" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveDeal('${id||''}')">Gravar</button>`);dealStatusFields(d.status)}
+function dealStatusFields(status){$('#lossField').classList.toggle('hidden',status!=='Perdido');$('#lossField input').required=status==='Perdido'}
+function saveDeal(id){const f=$('#dealForm');if(!f.reportValidity())return;const d=formData(f);if(!d.clientId)return toast('Selecione um cliente.','error');if(!id&&clientBlocked(d.clientId))return alert('Impossível criar novas negociações pois o cliente está bloqueado.');d.value=Number(d.value||0);if(d.status==='Perdido'&&!d.lossReason)return toast('Informe o motivo da perda.','error');if(id){const old=db.deals.find(x=>x.id===id);if(old.status==='Perdido'||old.status==='Fechado/Projeto')return toast('Negociação congelada.','error');const changed=old.status!==d.status;Object.assign(old,d);if(changed)old.history.push({date:today(),type:'Status',note:d.status});if(d.status==='Fechado/Projeto'&&changed){const p=createProjectFromDeal(old);save();closeModal();projectCreatedPopup(p);return}}else{d.id=uid();d.createdAt=today();d.history=[{date:today(),type:'Criação',note:'Oportunidade cadastrada'}];db.deals.push(d);if(d.status==='Fechado/Projeto'){const p=createProjectFromDeal(d);save();closeModal();projectCreatedPopup(p);return}}save();closeModal();renderDeals()}
+function openDeal(id){const d=db.deals.find(x=>x.id===id);const c=client(d.clientId)||{};const wa=(c.phone||'').replace(/\D/g,'');openModal('Negociação — '+clientName(d.clientId),`<div class="detail-grid"><div class="detail"><div class="k">Cliente</div><div class="v">${esc(c.name||'—')}</div></div><div class="detail"><div class="k">Contato</div><div class="v">${wa?`<a target="_blank" href="https://wa.me/55${wa}">WhatsApp</a> · `:''}${c.email?`<a href="mailto:${esc(c.email)}">E-mail</a>`:'—'}</div></div><div class="detail"><div class="k">Valor</div><div class="v">${brl(d.value)}</div></div><div class="detail"><div class="k">Status</div><div class="v">${badge(d.status)}</div></div><div class="detail full"><div class="k">Orientação próxima interação</div><div class="v">${esc(d.notes||'—')}</div></div></div><div class="section-title" style="margin-top:20px"><h2>Histórico</h2><button class="btn small" onclick="addHistory('${id}')">+ Registrar interação</button></div>${(d.history||[]).slice().reverse().map(h=>`<div class="history-item"><b>${esc(h.type)}</b> ·${dateBR(h.date)}<div class="secondary-cell">${esc(h.note||'')}</div></div>`).join('')||'<div class="empty">Sem histórico.</div>'}`,`<button class="btn secondary" onclick="closeModal()">Fechar</button><button class="btn" onclick="closeModal();openDealForm('${id}')">Editar</button>`)}
+function addHistory(id){const d=db.deals.find(x=>x.id===id);const note=prompt('Descreva a interação:');if(!note)return;d.history.push({date:today(),type:'Interação',note});save();openDeal(id)}
+function createProjectFromDeal(d){const p={id:uid(),dealId:d.id,clientId:d.clientId,name:d.description,value:d.value,status:'Pendente',schedule:[{id:uid(),action:'Kick-off',info:'Alinhamento inicial, escopo e responsáveis.',status:'Pendente',date:d.closeDate||today()}],receivableId:null,createdAt:today()};db.projects.push(p);return p}
+function projectCreatedPopup(p){openModal('Projeto criado',`<div class="detail-grid"><div class="detail"><div class="k">Cliente</div><div class="v">${esc(clientName(p.clientId))}</div></div><div class="detail"><div class="k">Projeto</div><div class="v">${esc(p.name)}</div></div></div><p class="small" style="margin-top:16px">A negociação foi congelada. Deseja cadastrar entrada e parcelas agora?</p>`,`<button class="btn secondary" onclick="closeModal();renderDeals()">Depois</button><button class="btn" onclick="closeModal();openProjectForm('${p.id}')">Cadastrar financeiro</button>`)}
+function dealToProject(id){const d=db.deals.find(x=>x.id===id);if(d.status==='Perdido'||d.status==='Fechado/Projeto')return toast('Negociação congelada.','error');const ex=db.projects.find(p=>p.dealId===id);if(ex)return openProject(ex.id);openProjectForm('',{clientId:d.clientId,dealId:id,name:d.description,value:d.value})}
+function renderProjects(){const q=(filters.q||'').toLowerCase(),status=filters.status||'';const list=db.projects.filter(p=>(!q||[p.name,clientName(p.clientId)].join(' ').toLowerCase().includes(q))&&(!status||p.status===status));const rows=list.map(p=>{const total=(p.schedule||[]).length,done=(p.schedule||[]).filter(a=>a.status==='Concluído').length,pct=total?Math.round(done/total*100):0;return `<tr><td class="primary-cell">${esc(p.name)}<div class="secondary-cell">${esc(clientName(p.clientId))}</div></td><td>${brl(p.value)}</td><td><div style="min-width:140px"><div class="progress"><span style="width:${pct}%"></span></div><div class="secondary-cell">${done}/${total} · ${pct}%</div></div></td><td><button class="btn small ghost" onclick="openProjectForm('${p.id}')">${badge(p.status)}</button></td><td><button class="btn small ghost" onclick="openProjectFinance('${p.id}')">${p.receivableId?'<span class="badge green">Financeiro vinculado</span>':'<span class="badge orange">Sem recebível</span>'}</button></td><td><div class="row-actions"><button class="btn small" onclick="openProject('${p.id}')">Abrir</button><button class="btn small ghost" onclick="projectMenu('${p.id}')">⋯</button></div></td></tr>`}).join('');page('Projetos','Execução, cronograma e financeiro com fonte única de dados.','<button class="btn" onclick="openProjectForm()">+ Novo projeto</button>',`<div class="card"><div class="filters"><div class="search"><label>Buscar</label><input value="${esc(filters.q||'')}" placeholder="Projeto ou cliente..." oninput="filters.q=this.value;renderProjects()"></div><div><label>Status</label><select onchange="filters.status=this.value;renderProjects()"><option value="">Todos</option><option>Pendente</option><option>Em execução</option><option>Concluído</option></select></div></div></div>${section('Portfólio','O financeiro do projeto é gerenciado pela conta a receber vinculada.',tableCard('Projetos',list.length,['Projeto','Valor','Cronograma','Status','Financeiro',''],rows,'Nenhum projeto cadastrado.','<button class="btn small" onclick="openProjectForm()">Cadastrar primeiro projeto</button>'))}`)}
+function projectMenu(id){openModal('Ações do projeto','',`<button class="btn secondary" onclick="closeModal()">Fechar</button><button class="btn ghost" onclick="closeModal();openProjectForm('${id}')">Editar</button><button class="btn ghost" onclick="closeModal();openProjectFinance('${id}')">Financeiro</button><button class="btn danger" onclick="deleteProject('${id}')">Excluir</button>`)}
+function projectReceivable(id){return db.receivables.find(r=>r.projectId===id)}
+function openProjectForm(id,preset={}){if(typeof preset==='string')preset={clientId:preset};let p;if(id){p=db.projects.find(x=>x.id===id)}else{if(clientBlocked(preset.clientId))return alert('Impossível criar novos projetos pois o cliente está bloqueado.');p=Object.assign({status:'Pendente',schedule:[]},preset)}const rec=id?projectReceivable(id):null;openModal(id?'Editar projeto':'Novo projeto',`<form id="projectForm"><div class="form-grid"><div><label>Cliente *</label><select name="clientId" required>${clientOptions(p.clientId)}</select></div><div><label>Negociação</label><select name="dealId"><option value="">Sem vínculo</option>${db.deals.map(d=>`<option value="${d.id}" ${d.id===p.dealId?'selected':''}>${esc(clientName(d.clientId))}</option>`).join('')}</select></div><div class="span2"><label>Nome do projeto *</label><input name="name" required value="${esc(p.name||'')}"></div><div><label>Valor</label><input name="value" type="number" step="0.01" value="${p.value||''}"></div><div><label>Status</label><select name="status"><option>Pendente</option><option>Em execução</option><option>Concluído</option></select></div></div></form><div class="section-title" style="margin-top:20px"><h2>Cronograma</h2><button class="btn small" onclick="addProjectScheduleLine()">+ Ação</button></div><div id="projectSchedule" class="timeline">${(p.schedule||[]).map(scheduleLine).join('')}</div><div class="section-title" style="margin-top:20px"><h2>Recebimentos</h2><span class="small">${rec?'Parcelas e recebimentos ficam na conta a receber vinculada.':'Ao salvar, será criada uma conta a receber vinculada.'}</span>${rec?'':`<button class="btn small" onclick="addProjectInstallment()">+ Parcela</button>`}</div><div id="projectInstallments" class="timeline">${rec?(rec.installments||[]).map((i,idx)=>installmentLine(i,true,rec.id,idx)).join(''):[{due:today(),value:'',payments:[]}].map(i=>installmentLine(i,false,'',-1)).join('')}</div>`,`<button class="btn secondary" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveProjectForm('${id||''}')">Salvar projeto</button>`)}
+function addProjectScheduleLine(){$('#projectSchedule').insertAdjacentHTML('beforeend',scheduleLine())}
+function addProjectInstallment(){$('#projectInstallments').insertAdjacentHTML('beforeend',installmentLine())}
+function saveProjectForm(id){const f=$('#projectForm');if(!f.reportValidity())return;const d=formData(f);d.value=Number(d.value||0);d.schedule=$$('#projectSchedule .timeline-item').map(r=>{const e=r.querySelectorAll('input,select');return{id:r.dataset.id\vert{}\vert{}uid(),action:e[0].value,info:e[1].value,status:e[2].value,date:e[3].value}}).filter(x=>x.action\vert{}\vert{}x.info\vert{}\vert{}x.date);let p;if(id){p=db.projects.find(x=>x.id===id);Object.assign(p,d)}else{if(clientBlocked(d.clientId))return alert('Impossível criar novos projetos pois o cliente está bloqueado.');p=Object.assign({id:uid(),createdAt:today()},d);db.projects.push(p)}const rec=projectReceivable(p.id);if(!id\vert{}\vert{}!rec){const insts=$$('#projectInstallments .installment').map(r=>{const e=r.querySelectorAll('input');return{id:uid(),label:e[0].value,due:e[1].value,value:Number(e[2].value||0),payments:[]}}).filter(i=>i.due&&i.value>0);if(insts.length){const r={id:rec?rec.id:uid(),clientId:p.clientId,projectId:p.id,description:p.name,value:insts.reduce((s,i)=>s+i.value,0),installments:insts,status:'Pendente',createdAt:today()};if(rec)Object.assign(rec,r);else{db.receivables.push(r);p.receivableId=r.id}}}else if(rec){rec.description=p.name;rec.value=p.value}refreshOverdue();save();closeModal();renderProjects();toast('Projeto salvo.')}
+function openProjectFinance(id){const p=db.projects.find(x=>x.id===id);const rec=projectReceivable(id);openModal('Financeiro — '+p.name,rec?`<div class="detail-grid"><div class="detail"><div class="k">Total</div><div class="v">${brl(recTotal(rec))}</div></div><div class="detail"><div class="k">Recebido</div><div class="v good">${brl(recPaid(rec))}</div></div></div><div class="section-title" style="margin-top:18px"><h2>Parcelas</h2></div>${(rec.installments||[]).map((i,idx)=>installmentLine(i,true,rec.id,idx)).join('')}`:'<div class="empty">Nenhum recebível vinculado.</div>',`<button class="btn secondary" onclick="closeModal()">Fechar</button>${rec?`<button class="btn" onclick="closeModal();openReceivableForm('${rec.id}')">Abrir conta a receber</button>`:''}`)}
+function openProject(id){const p=db.projects.find(x=>x.id===id);const total=(p.schedule||[]).length,done=(p.schedule||[]).filter(a=>a.status==='Concluído').length;openModal(p.name,`<div class="detail-grid"><div class="detail"><div class="k">Cliente</div><div class="v">${esc(clientName(p.clientId))}</div></div><div class="detail"><div class="k">Valor</div><div class="v">${brl(p.value)}</div></div><div class="detail"><div class="k">Escopo / entregáveis</div><div class="v">${esc(p.scope||'Não informado')}</div></div><div class="detail"><div class="k">Progresso</div><div class="v">${done}/${total} ações</div></div></div><div class="section-title" style="margin-top:18px"><h2>Cronograma</h2><button class="btn small" onclick="addScheduleLine()">+ Ação</button></div><div id="scheduleList" class="timeline">${(p.schedule||[]).map(scheduleLine).join('')}</div>`,`<button class="btn secondary" onclick="closeModal()">Fechar</button><button class="btn success" onclick="saveSchedule('${id}')">Salvar cronograma</button>`)}
+function scheduleLine(a={}){return `<div class="timeline-item" data-id="${a.id||uid()}"><input placeholder="Ação" value="${esc(a.action||'')}"><input placeholder="Entregável / informações" value="${esc(a.info||'')}"><select>${['Pendente','Em execução','Vencido','Concluído'].map(s=>`<option ${a.status===s?'selected':''}>${s}</option>`).join('')}</select><input type="date" value="${a.date||''}"><button class="icon" onclick="this.closest('.timeline-item').remove()">×</button></div>`}
+function addScheduleLine(){$('#scheduleList').insertAdjacentHTML('beforeend',scheduleLine())} function saveSchedule(id){const p=db.projects.find(x=>x.id===id);p.schedule=$$('#scheduleList .timeline-item').map(r=>{const e=r.querySelectorAll('input,select');return{id:r.dataset.id,action:e[0].value,info:e[1].value,status:e[2].value,date:e[3].value}}).filter(x=>x.action||x.info||x.date);refreshOverdue();p.status=p.schedule.length&&p.schedule.every(x=>x.status==='Concluído')?'Concluído':p.schedule.some(x=>x.status==='Em execução')?'Em execução':'Pendente';save();closeModal();renderProjects()}
+function deleteProject(id){const rec=projectReceivable(id);if(rec&&recPaid(rec)>0)return toast('Projeto possui recebimentos registrados.','error');if(rec&&!confirm('Excluir projeto e sua conta a receber vinculada?'))return;if(rec)db.receivables=db.receivables.filter(r=>r.id!==rec.id);db.projects=db.projects.filter(p=>p.id!==id);save();renderProjects()}
+function renderPayables(){const q=(filters.q||'').toLowerCase(),status=filters.status||'',m=filters.month||'';const list=db.payables.filter(p=>(!q||[p.supplier,p.description].join(' ').toLowerCase().includes(q))&&(!status||p.status===status)&&(!m||p.due.startsWith(m)));const rows=list.map(p=>{const paid=paidSum(p),rem=Math.max(0,p.value-paid);return `<tr><td class="primary-cell">${esc(p.supplier)}<div class="secondary-cell">${esc(p.description)}</div></td><td>${brl(p.value)}</td><td>${dateBR(p.due)}</td><td>${brl(paid)}<div class="secondary-cell">Saldo ${brl(rem)}</div></td><td>${badge(p.status)}</td><td>${p.recurring?'<span class="badge purple">Recorrente</span>':'—'}</td><td><div class="row-actions"><button class="btn small" onclick="openPayableDetails('${p.id}')">Pagamentos</button><button class="btn small ghost" onclick="payableMenu('${p.id}')">⋯</button></div></td></tr>`}).join('');page('Contas a pagar','Pagamentos parciais, recorrentes e controle de saldo.','<button class="btn" onclick="openPayableForm()">+ Nova conta</button>',`<div class="grid metrics"><div class="card"><div class="metric-label">Previsto no mês</div><div class="metric-value warn">${brl(list.filter(p=>p.due.startsWith(filters.month||today().slice(0,7))).reduce((s,p)=>s+p.value,0))}</div></div><div class="card"><div class="metric-label">Pago no mês</div><div class="metric-value bad">${brl(db.payables.flatMap(p=>p.payments).filter(x=>x.date.startsWith(filters.month||today().slice(0,7))).reduce((s,p)=>s+p.value,0))}</div></div><div class="card"><div class="metric-label">Saldo aberto</div><div class="metric-value">${brl(list.reduce((s,p)=>s+p.value-paidSum(p),0))}</div></div><div class="card"><div class="metric-label">Recorrentes</div><div class="metric-value">${list.filter(p=>p.recurring).length}</div></div></div>${section('Contas',tableCard('Contas a pagar',list.length,['Fornecedor','Valor','Vencimento','Pago / saldo','Status','Recorrência',''],rows))}`)}
+function payableMenu(id){openModal('Ações da conta','',`<button class="btn secondary" onclick="closeModal()">Fechar</button><button class="btn ghost" onclick="closeModal();openPayableForm('${id}',true)">Editar</button><button class="btn danger" onclick="deleteFinance('payables','${id}')">Excluir</button>`)}
+function openPayableForm(id,edit){const p=id?db.payables.find(x=>x.id===id):{due:today(),payments:[],recurring:false};openModal(id&&!edit?'Pagamentos — '+p.supplier:id?'Editar conta':'Nova conta a pagar',`<form id="financeForm"><div class="form-grid"><div><label>Fornecedor *</label><input name="supplier" required value="${esc(p.supplier||'')}"></div><div><label>Conta</label><input name="account" value="${esc(p.account||'')}"></div><div class="span2"><label>Descrição *</label><input name="description" required value="${esc(p.description||'')}"></div><div><label>Valor *</label><input name="value" type="number" step="0.01" required value="${p.value||''}"></div><div><label>Vencimento *</label><input name="due" type="date" required value="${p.due||today()}"></div><div class="span2"><label>Código de barras / PIX</label><input name="code" value="${esc(p.code||'')}"></div><div><label>Repetir mensalmente</label><select name="recurring"><option value="">Não</option><option value="1" ${p.recurring?'selected':''}>Sim — criar cópias por 6 meses</option></select></div></div></form>`,id&&!edit?`<button class="btn secondary" onclick="closeModal()">Fechar</button><button class="btn success" onclick="openPaymentForm('${id}')">+ Novo pagamento</button>`:`<button class="btn secondary" onclick="closeModal()">Cancelar</button><button class="btn" onclick="savePayable('${id||''}')">Salvar</button>`)}
+function savePayable(id){const f=$('#financeForm');if(!f.reportValidity())return;const d=formData(f);d.value=Number(d.value||0);d.recurring=d.recurring==='1';d.payments=id?db.payables.find(x=>x.id===id).payments:[];d.status=paidSum(d)>=d.value&&d.value>0?'Pago':paidSum(d)>0?'Parcial':'Pendente';if(id){Object.assign(db.payables.find(x=>x.id===id),d)}else{d.id=uid();db.payables.push(d);if(d.recurring)for(let i=1;i<=6;i++){const dt=new Date(d.due+'T12:00:00');dt.setMonth(dt.getMonth()+i);db.payables.push({...d,id:uid(),due:localDate(dt),payments:[],recurring:false,status:'Pendente'})}}save();closeModal();renderPayables()}
+function openPayableDetails(id){const p=db.payables.find(x=>x.id===id);const paid=paidSum(p),rem=Math.max(0,p.value-paid);openModal('Pagamentos — '+p.supplier,`<div class="detail-grid"><div class="detail"><div class="k">Valor original</div><div class="v">${brl(p.value)}</div></div><div class="detail"><div class="k">Saldo pendente</div><div class="v">${brl(rem)}</div></div></div><div class="section-title" style="margin-top:16px"><h2>Pagamentos</h2>${p.status!=='Pago'?`<button class="btn small" onclick="openPaymentForm('${id}')">+ Pagamento</button>`:''}</div>${p.payments.map((x,i)=>`<div class="timeline-item"><div><b>${dateBR(x.date)}</b></div><div>${esc(x.method\vert{}\vert{}'—')} ·${esc(x.bank||'—')}</div><div>${brl(x.value)}</div><div>${badge(p.status)}</div><button class="icon" onclick="deletePayment('${id}',${i})">×</button></div>`).join('')||'<div class="empty">Nenhum pagamento.</div>'}`,'<button class="btn secondary" onclick="closeModal()">Fechar</button>')}
+function openPaymentForm(id){const p=db.payables.find(x=>x.id===id);const rem=Math.max(0,p.value-paidSum(p));openModal('Registrar pagamento',`<form id="paymentForm"><div class="form-grid"><div><label>Data *</label><input name="date" type="date" required value="${today()}"></div><div><label>Valor *</label><input name="value" type="number" step="0.01" max="${rem}" required value="${rem}"></div><div><label>Forma</label><select name="method"><option>Pix</option><option>Transferência</option><option>Boleto</option><option>Cartão</option><option>Dinheiro</option></select></div><div><label>Banco</label><input name="bank"></div></div></form>`,`<button class="btn secondary" onclick="openPayableDetails('${id}')">Cancelar</button><button class="btn success" onclick="savePayment('${id}')">Gravar</button>`)}
+function savePayment(id){const p=db.payables.find(x=>x.id===id);const d=formData($('#paymentForm'));const v=Number(d.value||0),rem=Math.max(0,p.value-paidSum(p));if(v<=0||v>rem)return toast('Valor inválido ou superior ao saldo.','error');p.payments.push({id:uid(),date:d.date,value:v,method:d.method,bank:d.bank});p.status=paidSum(p)>=p.value?'Pago':'Parcial';save();openPayableDetails(id)}
+function deletePayment(id,i){const p=db.payables.find(x=>x.id===id);p.payments.splice(i,1);p.status=paidSum(p)>=p.value?'Pago':paidSum(p)>0?'Parcial':'Pendente';save();openPayableDetails(id)}
+function renderReceivables(){const q=(filters.q||'').toLowerCase(),status=filters.status||'',m=filters.month||'';const list=db.receivables.filter(r=>(!q||[clientName(r.clientId),projectName(r.projectId),r.description].join(' ').toLowerCase().includes(q))&&(!status||r.status===status)&&(!m||(r.installments||[]).some(i=>i.due.startsWith(m))));const rows=list.map(r=>{const total=recTotal(r),paid=recPaid(r);return `<tr><td class="primary-cell">${esc(clientName(r.clientId))}<div class="secondary-cell">${esc(projectName(r.projectId))}</div></td><td>${esc(r.description)}</td><td>${brl(total)}</td><td>${brl(paid)}<div class="secondary-cell">Saldo ${brl(total-paid)}</div></td><td>${badge(r.status)}</td><td><div class="row-actions"><button class="btn small" onclick="openReceivableForm('${r.id}')">Abrir</button><button class="btn small ghost" onclick="receivableMenu('${r.id}')">⋯</button></div></td></tr>`}).join('');page('Contas a receber','Fonte única das parcelas, recebimentos parciais e vínculo com projetos.','<button class="btn" onclick="openReceivableForm()">+ Nova conta</button>',`${section('Contas',tableCard('Contas a receber',list.length,['Cliente / projeto','Descrição','Total','Recebido / saldo','Status',''],rows))}`)}
+function receivableMenu(id){openModal('Ações','',`<button class="btn secondary" onclick="closeModal()">Fechar</button><button class="btn ghost" onclick="closeModal();openReceivableForm('${id}',true)">Editar</button><button class="btn danger" onclick="deleteFinance('receivables','${id}')">Excluir</button>`)}
+function openReceivableForm(id,edit,preset={}){const r=id?db.receivables.find(x=>x.id===id):Object.assign({installments:[{id:uid(),due:today(),value:'',payments:[]}]},preset);openModal(id&&!edit?'Conta a receber — '+clientName(r.clientId):id?'Editar conta':'Nova conta a receber',`<form id="financeForm"><div class="form-grid"><div><label>Cliente</label><select name="clientId">${clientOptions(r.clientId)}</select></div><div><label>Projeto</label><select name="projectId"><option value="">Sem vínculo</option>${db.projects.map(p=>`<option value="${p.id}" ${p.id===r.projectId?'selected':''}>${esc(p.name)}</option>`).join('')}</select></div><div class="span2"><label>Descrição *</label><input name="description" required value="${esc(r.description||'')}"></div></div><div class="section-title" style="margin-top:18px"><h2>Parcelas</h2><button type="button" class="btn small" onclick="addInstallment()">+ Parcela</button></div><div id="installments" class="timeline">${(r.installments||[]).map((i,idx)=>installmentLine(i,!!id,r.id,idx)).join('')}</div></form>`,id&&!edit?`<button class="btn secondary" onclick="closeModal()">Fechar</button><button class="btn" onclick="saveReceivable('${id}')">Salvar</button>`:`<button class="btn secondary" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveReceivable('${id||''}')">Salvar</button>`)}
+function installmentLine(i={},canReceive=false,rid='',idx=0){const paid=instPaid(i),rem=instRemaining(i);return `<div class="installment" data-id="${i.id||uid()}"><input placeholder="Identificação" value="${esc(i.label||'')}"><input type="date" value="${i.due||today()}"><input type="number" step="0.01" placeholder="Valor" value="${i.value||''}"><div><input disabled value="${i.status||'Em aberto'}"><div class="secondary-cell">${brl(paid)} pago · saldo ${brl(rem)}</div>${canReceive?`<button class="btn small success" style="margin-top:6px;width:100%" onclick="receiveInstallment('${rid}','${i.id}')">Receber</button>`:''}</div><button class="icon" onclick="this.closest('.installment').remove()">×</button></div>`}
+function addInstallment(){$('#installments').insertAdjacentHTML('beforeend',installmentLine())}
+function receiveInstallment(rid,iid){const r=db.receivables.find(x=>x.id===rid);const i=r.installments.find(x=>x.id===iid);const rem=instRemaining(i);openModal('Receber parcela',`<form id="receiptForm"><div class="form-grid"><div><label>Data *</label><input name="date" type="date" required value="${today()}"></div><div><label>Valor *</label><input name="value" type="number" step="0.01" max="${rem}" required value="${rem}"></div></div><p class="small" style="margin-top:12px">Saldo pendente: <b>${brl(rem)}</b>.</p></form>`,`<button class="btn secondary" onclick="closeModal();openProjectForm('${r.projectId}')">Cancelar</button><button class="btn success" onclick="saveReceipt('${rid}','${iid}')">Gravar</button>`)}
+function saveReceipt(rid,iid){const r=db.receivables.find(x=>x.id===rid);const i=r.installments.find(x=>x.id===iid);const d=formData($('#receiptForm'));const v=Number(d.value||0);if(v<=0||v>instRemaining(i))return toast('Valor inválido ou superior ao saldo.','error');i.payments.push({id:uid(),date:d.date,value:v});i.status=instStatus(i);r.status=r.installments.every(x=>x.status==='Recebido')?'Recebido':'Pendente';save();closeModal();r.projectId?openProjectForm(r.projectId):openReceivableForm(rid)}
+function saveReceivable(id){const f=$('#financeForm');if(!f.reportValidity())return;const d=formData(f);const old=id?db.receivables.find(x=>x.id===id):null;d.installments=$$('#installments .installment').map(row=>{const e=row.querySelectorAll('input');const oldInst=old?.installments?.find(i=>i.id===row.dataset.id);return{id:row.dataset.id,label:e[0].value,due:e[1].value,value:Number(e[2].value||0),payments:oldInst?.payments||[]}}).filter(i=>i.due&&i.value>0);d.installments.forEach(i=>i.status=instStatus(i));d.value=d.installments.reduce((s,i)=>s+i.value,0);d.status=d.installments.every(i=>i.status==='Recebido')?'Recebido':'Pendente';if(id){Object.assign(old,d);const p=db.projects.find(x=>x.id===old.projectId);if(p)p.receivableId=old.id}else{d.id=uid();db.receivables.push(d);const p=db.projects.find(x=>x.id===d.projectId);if(p)p.receivableId=d.id}save();closeModal();renderReceivables()}
+function deleteFinance(type,id){if(confirm('Excluir lançamento?')){db[type]=db[type].filter(x=>x.id!==id);save();type==='payables'?renderPayables():renderReceivables()}}
+function renderAgenda(){const start=filters.start||monthStart(),end=filters.end||today();const items=[];db.projects.forEach(p=>(p.schedule||[]).forEach(a=>{if(a.date>=start&&a.date<=end)items.push({date:a.date,client:clientName(p.clientId),clientId:p.clientId,project:p.name,action:a.action,info:a.info,status:a.status,notes:(db.deals.find(d=>d.clientId===p.clientId)||{}).notes||''})}));db.deals.forEach(d=>{if(d.nextDate>=start&&d.nextDate<=end)items.push({date:d.nextDate,client:clientName(d.clientId),clientId:d.clientId,project:d.description,action:'Follow-up '+d.nextAction,info:d.notes,status:d.status,notes:d.notes})});items.sort((a,b)=>a.date.localeCompare(b.date));const rows=items.map(x=>{const c=client(x.clientId)||{};const wa=(c.phone||'').replace(/\D/g,'');return `<tr><td class="primary-cell">${esc(x.client)}<div class="secondary-cell">${esc(x.project)}</div></td><td>${dateBR(x.date)}</td><td>${esc(x.action)}</td><td>${esc(x.info)}</td><td>${esc(x.notes||'—')}</td><td><div class="row-actions">${wa?`<a class="btn small ghost" target="_blank" href="https://wa.me/55${wa}">WhatsApp</a>`:''}${c.email?`<a class="btn small ghost" href="mailto:${esc(c.email)}">E-mail</a>`:''}</div></td></tr>`}).join('');page('Agenda','Selecione o período e gere o relatório de interações.','<button class="btn" onclick="generateAgendaPDF()">⇩ Gerar PDF</button>',`<div class="card"><div class="filters"><div><label>Início</label><input type="date" value="${start}" onchange="filters.start=this.value;renderAgenda()"></div><div><label>Fim</label><input type="date" value="${end}" onchange="filters.end=this.value;renderAgenda()"></div></div></div>${section('Compromissos',tableCard('Agenda operacional',items.length,['Cliente / projeto','Data','Ação','Informações','Orientação','Contato'],rows,'Nenhum compromisso no período.'))}`)}
+function generateAgendaPDF(){const start=filters.start||monthStart(),end=filters.end||today();const items=renderAgendaItems();if(!items.length)return toast('Nenhum compromisso no período.','error');const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'pt',format:'a4'});let y=60;doc.setFontSize(18);doc.text('Crittus Flow — Agenda',40,y);doc.setFontSize(10);doc.text(`Período: ${dateBR(start)} a ${dateBR(end)}`,40,y+=20);y+=26;items.forEach((x,i)=>{if(y>740){doc.addPage();y=50}doc.setFontSize(12);doc.text(`${i+1}. ${x.client}`,40,y);y+=15;doc.setFontSize(10);doc.text(`Data: ${dateBR(x.date)} | Ação: ${x.action} | Status: ${x.status}`,48,y);y+=13;doc.text(doc.splitTextToSize(`Projeto: ${x.project}`,500),48,y);y+=24;doc.text(doc.splitTextToSize(`Orientação: ${x.notes||'Não informada'}`,500),48,y);y+=28});doc.save(`agenda-${start}_a_${end}.pdf`)}
+function renderAgendaItems(){const start=filters.start||monthStart(),end=filters.end||today();const items=[];db.projects.forEach(p=>(p.schedule||[]).forEach(a=>{if(a.date>=start&&a.date<=end)items.push({date:a.date,client:clientName(p.clientId),project:p.name,action:a.action,status:a.status,notes:(db.deals.find(d=>d.clientId===p.clientId)||{}).notes||''})}));db.deals.forEach(d=>{if(d.nextDate>=start&&d.nextDate<=end)items.push({date:d.nextDate,client:clientName(p.clientId),project:d.description,action:'Follow-up '+d.nextAction,status:d.status,notes:d.notes})});return items.sort((a,b)=>a.date.localeCompare(b.date))}
+function exportBackup(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));a.download=`crittus-backup-${today()}.json`;a.click()}
+function importBackup(e){const file=e.target.files[0];if(!file)return;if(!confirm('Importar substituirá os dados atuais. Continuar?'))return;const r=new FileReader();r.onload=()=>{try{db=migrate(JSON.parse(r.result));save();setView(currentView);toast('Backup importado.')}catch{toast('Arquivo inválido.','error')}};r.readAsText(file)}
+function openModal(t,b,f=''){$('#modalTitle').textContent=t;$('#modalBody').innerHTML=b;$('#modalFoot').innerHTML=f;$('#modal').classList.remove('hidden')}function closeModal(){$('#modal').classList.add('hidden')}
+function formData(f){return Object.fromEntries(new FormData(f))}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+</script></body></html>
